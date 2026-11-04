@@ -47,14 +47,14 @@ const navGroups = [
         icon: "ph:microphone-duotone", // 面试训练图标。
       },
       {
-        key: "resumeNavAi", // 导航文案标识
-        path: "/resume/ai", // 导航目标路径
-        icon: "lucide:sparkles", // 人工智能导航图标。
-      },
-      {
         key: "resumeNavAiUsage", // 用户个人使用情况入口文案。
         path: "/resume/ai-usage", // 个人完成次数与近期记录页面。
         icon: "tabler:history", // 使用记录图标。
+      },
+      {
+        key: "resumeNavAiSettings", // AI 设置入口文案，指向模型绑定与添加页面。
+        path: "/resume/ai", // 导航目标路径
+        icon: "lucide:sparkles", // 人工智能导航图标。
       },
     ],
   },
@@ -107,7 +107,8 @@ watch([() => route.path, isMobile], () => {
   <aside class="relative z-50 hidden h-full w-fit shrink-0 flex-col border-r border-sf-b bg-sf-primary text-sf-text md:flex">
     <!-- 品牌区与顶部栏同高，标识在整条内居中，保留组件自带的圆角悬停底色。 -->
     <ProjectTitle
-      class="flex h-12 shrink-0 items-center justify-center border-b border-sf-b px-3 [&_.animate-pulse]:animate-none [&_a]:gap-3 [&_a>span]:font-semibold [&_a>span]:tracking-normal"
+      class="flex h-12 shrink-0 items-center justify-center border-b border-sf-b px-3 [&_.animate-pulse]:animate-none [&_a]:gap-3 [&_a>span]:text-xl [&_a>span]:font-semibold [&_a>span]:tracking-normal"
+      :logo-size="6"
       url="/resume"
     />
     <!-- 按功能分组陈列，组标题用说明文字区分层次，条目保持紧凑居中。 -->

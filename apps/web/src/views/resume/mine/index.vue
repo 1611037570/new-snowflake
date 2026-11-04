@@ -179,7 +179,7 @@ const handleClearTrash = () => {
 </script>
 
 <template>
-  <div class="relative mx-auto flex h-full w-full max-w-7xl flex-col">
+  <div class="relative flex h-full w-full flex-col">
     <!-- 页头直接展示操作，自身内边距承担列表间距，避免额外间隙叠加。 -->
     <header class="flex min-w-0 flex-wrap items-center justify-between gap-3 p-3">
       <div class="flex min-w-0 flex-wrap items-center gap-3">
@@ -212,7 +212,7 @@ const handleClearTrash = () => {
     <SfScrollbar class="flex-1" flush>
       <div class="flex h-full flex-col px-3 py-1">
         <!-- 简历草稿列表 -->
-        <RevealGrid :items="displayList" key-field="id">
+        <RevealGrid :items="displayList" key-field="id" :reveal="false">
           <template #default="{ item: card }">
             <!-- 新建简历入口项 -->
             <CreateResume v-if="card.type === 'create'" />

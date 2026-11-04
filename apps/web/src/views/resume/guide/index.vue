@@ -43,7 +43,7 @@ function scrollToGuide(index: number) {
 
 <template>
   <SfScrollbar class="h-full bg-sf-page" flush>
-    <main class="mx-auto w-full max-w-7xl p-3 text-sf-text">
+    <main class="w-full p-3 text-sf-text">
       <!-- 页头统一使用正文色标题与次级说明，不额外展示栏目小字。 -->
       <header>
         <div class="flex flex-wrap items-center gap-3">
@@ -132,7 +132,7 @@ function scrollToGuide(index: number) {
                 {{ guide.list.length }}条
               </span>
             </h2>
-            <ol class="mt-3 grid gap-3 md:grid-cols-2">
+            <ol class="mt-3 grid gap-3 grid-cols-[repeat(auto-fit,minmax(320px,1fr))]">
               <li v-for="item in guide.list" :key="item.title" class="h-full">
                 <section
                   class="h-full rounded-xl border border-sf-b bg-sf-primary p-3 transition-colors hover:border-sf-theme"

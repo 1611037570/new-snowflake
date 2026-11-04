@@ -12,7 +12,7 @@ const { applications, followUps, isLanded } = storeToRefs(statisticsStore);
 </script>
 
 <template>
-  <div class="relative mx-auto flex h-full w-full max-w-7xl flex-col gap-3">
+  <div class="relative flex h-full w-full flex-col gap-3">
     <div class="mt-3 flex w-full min-w-0 items-center justify-between px-3">
       <h1 class="text-lg font-semibold text-sf-text">{{ $t("resumeStatisticsTitle") }}</h1>
     </div>

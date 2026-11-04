@@ -5,7 +5,7 @@
 <template>
   <SfScrollbar class="h-full bg-sf-page" flush>
     <!-- 入口移除装饰图标，页面与卡片统一使用紧凑内边距。 -->
-    <main class="mx-auto w-full max-w-7xl p-3 text-sf-text">
+    <main class="w-full p-3 text-sf-text">
       <header>
         <div class="flex flex-wrap items-center gap-3">
           <h1 class="text-lg font-semibold text-sf-text">{{ $t("resumeGuideToolsTitle") }}</h1>
@@ -15,7 +15,7 @@
         </p>
       </header>
 
-      <section class="mt-3 grid gap-3 lg:grid-cols-3" :aria-label="$t('resumeGuideToolsTitle')">
+      <section class="mt-3 grid gap-3 grid-cols-[repeat(auto-fit,minmax(320px,1fr))]" :aria-label="$t('resumeGuideToolsTitle')">
         <RouterLink
           to="/resume/tools/resignation-score"
           class="group flex flex-col gap-3 rounded-xl border border-sf-b bg-sf-primary p-3 transition-colors hover:border-sf-theme hover:bg-sf-bg"

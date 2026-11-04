@@ -67,11 +67,12 @@ onUnmounted(() => {
 // 稳定 key：优先取 keyField 字段，缺省回退下标
 const getKey = (item, index) => item?.[props.keyField] ?? index;
 
+// 列数跟随可用宽度自动增减：列宽不低于卡片最小宽度，宽屏继续加列而不拉宽卡片
 const gridClass = computed(() => {
   if (props.size === "default") {
-    return "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
+    return "grid-cols-[repeat(auto-fill,minmax(240px,1fr))]";
   } else if (props.size === "small") {
-    return "grid-cols-1 md:grid-cols-2 xl:grid-cols-3";
+    return "grid-cols-[repeat(auto-fill,minmax(384px,1fr))]";
   }
   return "";
 });

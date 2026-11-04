@@ -7,6 +7,8 @@ const router = useRouter();
 // 跳转地址由调用方指定，默认回到我的简历
 const props = defineProps({
   url: { type: String, default: "/resume/mine" },
+  // logo 尺寸沿用 SfLogo 的刻度，默认保持原有大小，调用方可单独放大
+  logoSize: { type: [String, Number], default: "5.5" },
 });
 
 // 统一简历模块入口，复用项目标识与返回行为
@@ -24,7 +26,7 @@ const handleBack = () => {
       class="flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 text-sf-theme transition-all hover:bg-sf-theme-3"
       @click.prevent="handleBack"
     >
-      <SfLogo size="5.5" class="animate-pulse" name="resume" />
+      <SfLogo :size="logoSize" class="animate-pulse" name="resume" />
 
       <span class="hidden text-base font-bold tracking-wide md:flex">{{
         $t("core.router.resume")

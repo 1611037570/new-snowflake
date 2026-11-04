@@ -22,7 +22,7 @@ const handleConfirm = (item: Record<string, any>) => {
 
 <template>
   <SfScrollbar class="h-full bg-sf-page" flush>
-    <main class="mx-auto flex w-full max-w-7xl flex-col gap-3 p-3 text-sf-text">
+    <main class="flex w-full flex-col gap-3 p-3 text-sf-text">
       <header>
         <h1 class="text-lg font-semibold text-sf-text">{{ $t("resumeGeneratePageTitle") }}</h1>
         <p class="mt-[6px] max-w-3xl text-xs leading-6 text-sf-text-2">
