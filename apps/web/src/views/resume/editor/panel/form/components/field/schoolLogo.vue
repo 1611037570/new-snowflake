@@ -65,7 +65,7 @@ onBeforeUnmount(closeCrop);
     <div v-if="image" class="flex flex-col items-start gap-3">
       <button
         type="button"
-        class="flex cursor-pointer items-center gap-3 rounded-md text-xs text-sf-text transition-colors hover:text-sf-theme disabled:cursor-wait"
+        class="flex cursor-pointer items-center gap-[3px] rounded-md text-xs text-sf-text transition-colors hover:text-sf-theme disabled:cursor-wait"
         :disabled="loading"
         @click="openPicker"
       >

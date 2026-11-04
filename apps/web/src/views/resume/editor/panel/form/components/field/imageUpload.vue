@@ -65,6 +65,18 @@ const displayRadius = computed(() => {
 // 图片查看器显隐
 const previewVisible = ref(false);
 
+// 下载当前保存的头像，并根据图片格式设置文件扩展名。
+const exportAvatar = () => {
+  const format = image.value.match(/^data:image\/([a-zA-Z0-9.+-]+)/)?.[1]?.toLowerCase();
+  const extension = format === "jpeg" ? "jpg" : format === "svg+xml" ? "svg" : format || "webp";
+  const link = document.createElement("a");
+  link.href = image.value;
+  link.download = `${$t("avatar")}.${extension}`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+};
+
 // 图片上传全流程 hook：vueuse 选择文件，内部完成裁切压缩并返回完整图片 Data URL
 const { openPicker, handleFile, cropVisible, cropSrc, confirmCrop, closeCrop } = useImageUpload({
   crop: true,
@@ -207,19 +219,24 @@ const handleConfirmCrop = async (cropper) => {
       <!-- 右侧垂直操作栏：图标加文字描述，参考 image 项目操作栏布局 -->
       <div v-if="image" class="flex h-full flex-col gap-1">
         <div
-          class="flex cursor-pointer items-center gap-1 rounded-md px-1 py-1 transition-colors hover:text-sf-theme"
+          class="flex cursor-pointer items-center gap-[3px] rounded-md transition-colors hover:text-sf-theme"
           @click="openPicker"
         >
           <SfIcon icon="ic:round-file-upload" size="5" />
           <span class="text-xs">{{ $t("reuploadImage") }}</span>
         </div>
         <div
-          class="flex cursor-pointer items-center gap-1 rounded-md px-1 py-1 transition-colors hover:text-sf-theme"
+          class="flex cursor-pointer items-center gap-[3px] rounded-md transition-colors hover:text-sf-theme"
           @click="previewVisible = true"
         >
           <SfIcon icon="ic:round-zoom-in" size="5" />
           <span class="text-xs">{{ $t("viewImage") }}</span>
         </div>
+        <!-- 已上传头像可单独导出。 -->
+        <button type="button" class="flex cursor-pointer items-center gap-[3px] rounded-md text-sf-text transition-colors hover:text-sf-theme" @click="exportAvatar">
+          <SfIcon icon="material-symbols:download" size="5" />
+          <span class="text-xs">{{ $t("exportAvatar") }}</span>
+        </button>
       </div>
     </div>
     <!-- 图片查看器：点击查看上传的大图 -->
