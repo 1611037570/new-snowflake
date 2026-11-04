@@ -13,7 +13,7 @@
         <span class="text-sf-theme">⭐</span>
         <span>{{ $t("core.donation.githubStars") }}</span>
         <img
-          src="https://img.shields.io/github/stars/1611037570/snowflake-home.svg"
+          src="https://img.shields.io/github/stars/1611037570/qzcv.svg"
           alt="GitHub Stars"
           class="h-6 w-18"
         />
@@ -50,7 +50,7 @@
 import { useCopy } from "@/hooks";
 
 function goGitHub() {
-  urlNavigation("https://github.com/1611037570/snowflake-home");
+  urlNavigation("https://github.com/1611037570/qzcv");
 }
 
 function goShare() {

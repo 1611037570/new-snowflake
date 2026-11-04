@@ -48,7 +48,7 @@ const showStandardA4 = () => {
 
 // 样式确实与预览不符时，引导到 GitHub Issues 反馈
 const reportIssue = () => {
-  window.open("https://github.com/1611037570/snowflake-home/issues", "_blank", "noopener,noreferrer");
+  window.open("https://github.com/1611037570/qzcv/issues", "_blank", "noopener,noreferrer");
 };
 </script>
 

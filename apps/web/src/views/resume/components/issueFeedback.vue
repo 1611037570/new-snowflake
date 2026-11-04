@@ -1,7 +1,7 @@
 <script setup>
 // 点击入口在新窗口打开 GitHub Issues
 const goToIssues = () => {
-  window.open("https://github.com/1611037570/snowflake-home/issues", "_blank", "noopener,noreferrer");
+  window.open("https://github.com/1611037570/qzcv/issues", "_blank", "noopener,noreferrer");
 };
 </script>
 

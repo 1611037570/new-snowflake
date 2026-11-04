@@ -1,7 +1,7 @@
 import { config } from "@/configs";
 
 // 简历页展示的开源仓库，本地缓存键与跳转地址共用此配置。
-export const GITHUB_REPOSITORY = "1611037570/snowflake-home";
+export const GITHUB_REPOSITORY = "1611037570/qzcv";
 export const GITHUB_REPOSITORY_URL = `https://github.com/${GITHUB_REPOSITORY}`;
 
 export const getGithubStars = async (): Promise<number> => {

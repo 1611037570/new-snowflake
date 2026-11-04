@@ -42,7 +42,7 @@ const submit = async () => {
 // 反馈入口暂时统一跳转至 GitHub Issues
 const goToFeedback = () => {
   window.open(
-    "https://github.com/1611037570/snowflake-home/issues",
+    "https://github.com/1611037570/qzcv/issues",
     "_blank",
     "noopener,noreferrer",
   );

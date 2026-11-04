@@ -32,7 +32,7 @@ function enterFocusMode() {
   resumeStore.setFocusMode(true);
 }
 function goGitHub() {
-  urlNavigation("https://github.com/1611037570/snowflake-home");
+  urlNavigation("https://github.com/1611037570/qzcv");
 }
 
 const toolbarItems = computed(() => [
