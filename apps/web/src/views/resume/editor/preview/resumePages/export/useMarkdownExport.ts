@@ -160,7 +160,18 @@ export const exportMarkdown = (onSuccess?: () => void, itemOverride?: any) => {
     const schema = getSchema(moduleKey, runtimeConfig.value);
     const definitions: FieldDefinition[] = [];
     collectFieldDefinitions(getSchemaFields(schema), definitions);
-    const records = getRecords(moduleData);
+    // 专业技能的正文与列表可以同时保存，导出当前布局对应的内容。
+    const skillList = moduleKey === "skill" && item?.ui?.skill?.layout === "proficiency";
+    if (skillList) {
+      definitions.splice(0, definitions.length,
+        { key: "name", label: "技能名称" },
+        { key: "desc", label: "说明" },
+        { key: "level", label: "熟练度" },
+      );
+    } else if (moduleKey === "skill") {
+      definitions.splice(0, definitions.length, { key: "content", label: "内容" });
+    }
+    const records = getRecords(moduleKey === "skill" && !skillList ? { data: moduleData.data } : moduleData);
     if (!records.length) return;
 
     lines.push(`## ${getModuleTitle(moduleKey, moduleData, schema)}`, "");
