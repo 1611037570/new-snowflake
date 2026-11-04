@@ -1,5 +1,5 @@
 <template>
-  <el-form ref="dynamicForm" :model="data" label-width="auto" class="flex w-full flex-col">
+  <el-form ref="dynamicForm" :model="data" label-width="auto" class="flex w-full flex-col" @mouseenter.capture="handleInputMouseEnter">
     <!-- 字段各自等待异步内容，普通字段不等待整张表单。 -->
     <FormRenderer v-model:items="form" />
   </el-form>
@@ -39,6 +39,12 @@ const props = withDefaults(defineProps<DynamicFormProps>(), {
   options: () => ({}),
   useRules: true,
 });
+
+// 触屏设备不让输入框通过鼠标悬停提前显示清除按钮，保留聚焦后的清除功能。
+const handleInputMouseEnter = (event: MouseEvent) => {
+  if (!window.matchMedia("(hover: none)").matches) return;
+  if (event.target instanceof Element && event.target.matches(".el-input")) event.stopPropagation();
+};
 
 const instance = getCurrentInstance();
 const emit = instance?.emit;
