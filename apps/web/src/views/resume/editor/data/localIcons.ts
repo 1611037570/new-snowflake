@@ -23,23 +23,32 @@ import LucideArrowDownIcon from "@iconify-vue/lucide/arrow-down";
 import LucideArrowLeftIcon from "@iconify-vue/lucide/arrow-left";
 import LucideArrowRightIcon from "@iconify-vue/lucide/arrow-right";
 import LucideArrowUpIcon from "@iconify-vue/lucide/arrow-up";
+import LucideBaselineIcon from "@iconify-vue/lucide/baseline";
+import LucideBoldIcon from "@iconify-vue/lucide/bold";
 import LucideBriefcaseIcon from "@iconify-vue/lucide/briefcase";
 import LucideCheckIcon from "@iconify-vue/lucide/check";
 import LucideChevronRightIcon from "@iconify-vue/lucide/chevron-right";
 import LucideCircleSlashIcon from "@iconify-vue/lucide/circle-slash";
+import LucideClipboardPasteIcon from "@iconify-vue/lucide/clipboard-paste";
 import LucideContrastIcon from "@iconify-vue/lucide/contrast";
 import LucideCopyIcon from "@iconify-vue/lucide/copy";
 import LucideSearchIcon from "@iconify-vue/lucide/search";
 import LucideEllipsisVerticalIcon from "@iconify-vue/lucide/ellipsis-vertical";
+import LucideEraserIcon from "@iconify-vue/lucide/eraser";
 import LucideEyeIcon from "@iconify-vue/lucide/eye";
 import LucideEyeOffIcon from "@iconify-vue/lucide/eye-off";
 import LucideFileTextIcon from "@iconify-vue/lucide/file-text";
 import LucideFocusIcon from "@iconify-vue/lucide/focus";
 import LucideHashIcon from "@iconify-vue/lucide/hash";
 import LucideHeading2Icon from "@iconify-vue/lucide/heading-2";
+import LucideItalicIcon from "@iconify-vue/lucide/italic";
 import LucideLayoutTemplateIcon from "@iconify-vue/lucide/layout-template";
+import LucideLinkIcon from "@iconify-vue/lucide/link";
+import LucideListIcon from "@iconify-vue/lucide/list";
+import LucideListOrderedIcon from "@iconify-vue/lucide/list-ordered";
 import LucideLoaderCircleIcon from "@iconify-vue/lucide/loader-circle";
 import LucideMaximizeIcon from "@iconify-vue/lucide/maximize";
+import LucidePaintBucketIcon from "@iconify-vue/lucide/paint-bucket";
 import LucidePaletteIcon from "@iconify-vue/lucide/palette";
 import LucidePencilIcon from "@iconify-vue/lucide/pencil";
 import LucideRedo2Icon from "@iconify-vue/lucide/redo-2";
@@ -50,6 +59,7 @@ import LucideSwatchBookIcon from "@iconify-vue/lucide/swatch-book";
 import LucideTrash2Icon from "@iconify-vue/lucide/trash-2";
 import LucideTriangleAlertIcon from "@iconify-vue/lucide/triangle-alert";
 import LucideTypeIcon from "@iconify-vue/lucide/type";
+import LucideUnderlineIcon from "@iconify-vue/lucide/underline";
 import LucideUndo2Icon from "@iconify-vue/lucide/undo-2";
 import LucideXIcon from "@iconify-vue/lucide/x";
 import MaterialSymbolsDownloadIcon from "@iconify-vue/material-symbols/download";
@@ -65,7 +75,6 @@ import MdiBriefcaseClockIcon from "@iconify-vue/mdi/briefcase-clock";
 import MdiCakeVariantIcon from "@iconify-vue/mdi/cake-variant";
 import MdiChatQuestionOutlineIcon from "@iconify-vue/mdi/chat-question-outline";
 import MdiCodeTagsIcon from "@iconify-vue/mdi/code-tags";
-import MdiContentPasteIcon from "@iconify-vue/mdi/content-paste";
 import MdiConsoleLineIcon from "@iconify-vue/mdi/console-line";
 import MdiCurrencyCnyIcon from "@iconify-vue/mdi/currency-cny";
 import MdiDatabaseOutlineIcon from "@iconify-vue/mdi/database-outline";
@@ -195,23 +204,32 @@ export const PROJECT_ICON_LIST: Record<string, Component> = {
   "lucide:arrow-left": LucideArrowLeftIcon,
   "lucide:arrow-right": LucideArrowRightIcon,
   "lucide:arrow-up": LucideArrowUpIcon,
+  "lucide:baseline": LucideBaselineIcon,
+  "lucide:bold": LucideBoldIcon,
   "lucide:briefcase": LucideBriefcaseIcon,
   "lucide:check": LucideCheckIcon,
   "lucide:chevron-right": LucideChevronRightIcon,
   "lucide:circle-slash": LucideCircleSlashIcon,
+  "lucide:clipboard-paste": LucideClipboardPasteIcon,
   "lucide:contrast": LucideContrastIcon,
   "lucide:copy": LucideCopyIcon,
   "lucide:search": LucideSearchIcon, // 模块搜索入口与面板标题图标。
   "lucide:ellipsis-vertical": LucideEllipsisVerticalIcon,
+  "lucide:eraser": LucideEraserIcon,
   "lucide:eye": LucideEyeIcon,
   "lucide:eye-off": LucideEyeOffIcon,
   "lucide:file-text": LucideFileTextIcon,
   "lucide:focus": LucideFocusIcon,
   "lucide:hash": LucideHashIcon,
   "lucide:heading-2": LucideHeading2Icon,
+  "lucide:italic": LucideItalicIcon,
   "lucide:layout-template": LucideLayoutTemplateIcon,
+  "lucide:link": LucideLinkIcon,
+  "lucide:list": LucideListIcon,
+  "lucide:list-ordered": LucideListOrderedIcon,
   "lucide:loader-circle": LucideLoaderCircleIcon,
   "lucide:maximize": LucideMaximizeIcon,
+  "lucide:paint-bucket": LucidePaintBucketIcon,
   "lucide:palette": LucidePaletteIcon,
   "lucide:pencil": LucidePencilIcon,
   "lucide:redo-2": LucideRedo2Icon,
@@ -222,6 +240,7 @@ export const PROJECT_ICON_LIST: Record<string, Component> = {
   "lucide:trash-2": LucideTrash2Icon,
   "lucide:triangle-alert": LucideTriangleAlertIcon,
   "lucide:type": LucideTypeIcon,
+  "lucide:underline": LucideUnderlineIcon,
   "lucide:undo-2": LucideUndo2Icon,
   "lucide:x": LucideXIcon,
   "material-symbols:download": MaterialSymbolsDownloadIcon,
@@ -237,7 +256,6 @@ export const PROJECT_ICON_LIST: Record<string, Component> = {
   "mdi:cake-variant": MdiCakeVariantIcon,
   "mdi:chat-question-outline": MdiChatQuestionOutlineIcon,
   "mdi:code-tags": MdiCodeTagsIcon,
-  "mdi:content-paste": MdiContentPasteIcon,
   "mdi:console-line": MdiConsoleLineIcon,
   "mdi:currency-cny": MdiCurrencyCnyIcon,
   "mdi:database-outline": MdiDatabaseOutlineIcon,

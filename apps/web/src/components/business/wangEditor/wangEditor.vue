@@ -11,9 +11,7 @@
       <!-- 编辑器实例创建成功后再挂载工具栏，避免工具栏在 editor 就绪前初始化报错 -->
       <div v-if="editorRef" class="flex min-w-0 items-center">
         <PastePlainTextToggle />
-        <div class="min-w-0 flex-1">
-          <Toolbar :editor="editorRef" :defaultConfig="toolbarConfig" :mode="mode" />
-        </div>
+        <EditorToolbar :editor="editorRef" :config="toolbarConfig" :mode="mode" />
         <slot v-if="$slots.toolbar" name="toolbar" :editor="editorRef" />
       </div>
       <!-- 正文顶部显示分隔线，关闭滚动条默认左右留白以避免重复内边距。 -->
@@ -80,9 +78,7 @@
       <!-- 弹窗工具栏与主编辑器共用同一份配置，实例就绪后再渲染 -->
       <div v-if="expandEditorRef" class="flex min-w-0 items-center rounded-2xl border border-sf-b px-3">
         <PastePlainTextToggle />
-        <div class="min-w-0 flex-1">
-          <Toolbar :editor="expandEditorRef" :defaultConfig="expandToolbarConfig" :mode="mode" />
-        </div>
+        <EditorToolbar :editor="expandEditorRef" :config="expandToolbarConfig" :mode="mode" />
       </div>
       <!-- 正文沿用主编辑器的滚动口径：外层 SfScrollbar 负责滚动，正文自然撑开 -->
       <SfScrollbar
@@ -119,6 +115,7 @@ import { ElMessage } from "element-plus";
 import { $t } from "@/locales";
 import { confirm } from "@/components/business/confirm";
 import PastePlainTextToggle from "./pastePlainTextToggle.vue";
+import EditorToolbar from "./editorToolbar.vue";
 import { storeToRefs } from "pinia";
 import { useSystemStore } from "@/stores/modules/system";
 import {
@@ -126,7 +123,6 @@ import {
   getSelectedEditorLink,
   insertEditorLink,
   registerExpandHandler,
-  Toolbar,
   updateEditorLink,
 } from "./editorLoader";
 import { useFormReadyTask } from "../dynamicForm/api";
@@ -498,6 +494,18 @@ const confirmLink = async () => {
   border-radius: 50% !important; // 悬停背景与新增开关保持圆形
   height: 24px; // 按钮高度
   padding: 0 3px; // 宽度随图标内容撑开
+}
+// 编辑器原生按钮继续处理菜单，图标统一由项目组件绘制。
+:deep(.w-e-bar-item button.sf-wang-icon-ready > svg) {
+  display: none;
+}
+:deep(.w-e-bar-item button.sf-wang-icon-ready .sf-wang-toolbar-icon svg) {
+  fill: none;
+  stroke: currentColor;
+}
+:deep(.w-e-bar-item button.sf-wang-icon-ready:hover .sf-wang-toolbar-icon),
+:deep(.w-e-bar-item button.sf-wang-icon-ready.active .sf-wang-toolbar-icon) {
+  color: var(--color-sf-theme);
 }
 // 选中态不铺背景底色，只让图标变成主题色
 :deep(.w-e-bar-item .active) {

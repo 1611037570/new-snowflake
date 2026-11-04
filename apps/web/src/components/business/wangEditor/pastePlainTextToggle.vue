@@ -20,7 +20,7 @@ const togglePastePlainText = () => { pastePlainText.value = !pastePlainText.valu
       @mousedown.prevent
       @click="togglePastePlainText"
     >
-      <SfIcon icon="mdi:content-paste" size="3" />
+      <SfIcon icon="lucide:clipboard-paste" size="4" />
     </button>
   </SfTooltip>
 </template>
