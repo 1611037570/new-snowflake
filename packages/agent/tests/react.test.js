@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
-import { LLM } from "../dist/index.js";
+import { test } from "vitest";
+import { LLM } from "@snowflake/ai";
+import { createReactRunner } from "../index";
 
-// 校验内置调度器通过请求接口完成工具调用并继续生成答案。
+// 校验通用运行器通过请求接口完成工具调用并继续生成答案。
 test("执行工具后继续模型请求", async () => {
   const llm = new LLM({
     url: "https://example.com/chat",
@@ -33,7 +34,7 @@ test("执行工具后继续模型请求", async () => {
 
   const executed = [];
   const received = { reasoning: [], content: [], token: [], event: [] };
-  const runner = llm.react({
+  const runner = createReactRunner(llm, {
     tools: [
       {
         name: "echo",
@@ -86,7 +87,7 @@ test("按配置压缩 ReAct 的请求历史", async () => {
     },
   });
   const compacted = [];
-  const runner = llm.react({
+  const runner = createReactRunner(llm, {
     tools: [],
     maxSteps: 1,
     context: {
@@ -123,7 +124,7 @@ test("工具结果过大时继续 ReAct", async () => {
       }
     },
   });
-  const runner = llm.react({
+  const runner = createReactRunner(llm, {
     tools: [{ name: "echo", description: "返回文本", parameters: { type: "object" }, execute: () => "很长的工具输出内容很多很多很多" }],
     maxSteps: 2,
     context: {
@@ -146,7 +147,7 @@ test("最终答案未通过验收后继续修正", async () => {
     abortFn: () => {},
     sendFn: async () => config.onContent(answers.shift()),
   });
-  const runner = llm.react({
+  const runner = createReactRunner(llm, {
     tools: [],
     maxSteps: 2,
     beforeFinal: (answer) => {

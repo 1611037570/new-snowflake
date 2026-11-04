@@ -1,4 +1,4 @@
-import type { ReactTool } from "@snowflake/ai";
+import type { ReactTool } from "@snowflake/agent";
 import { loadSkillResource } from "../types";
 import { DRAFT_REQUEST_RULE, OPTIONAL_FIELD_RULE } from "../writingRules";
 import type {

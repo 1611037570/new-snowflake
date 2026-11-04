@@ -1,4 +1,10 @@
-import type { ChatMessage, LLM, ReactConfig, ReactTool } from "@snowflake/ai";
+import type { LLM } from "@snowflake/ai";
+import { createReactRunner } from "./runtime/runner";
+import type { ChatMessage, ReactConfig, ReactTool } from "./runtime/types";
+
+export { createReactRunner } from "./runtime/runner";
+export { ToolRegistry } from "./runtime/tools";
+export type { ChatMessage, ReactConfig, ReactTool, ThinkResult, ToolCall, Observation } from "./runtime/types";
 
 export interface AgentSkill {
   id: string; // 技能稳定标识。
@@ -32,7 +38,7 @@ export interface Agent {
 // 每次创建都有独立工具循环，业务规则与完成策略始终由调用方提供。
 export const createAgent = (options: CreateAgentOptions): Agent => {
   options.assertActive?.();
-  const runner = options.model.react({
+  const runner = createReactRunner(options.model, {
     ...options.reactConfig,
     tools: options.tools.map((tool): ReactTool => ({
       ...tool,

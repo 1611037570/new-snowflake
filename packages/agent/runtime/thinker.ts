@@ -1,4 +1,4 @@
-import type { ChatMessage, ReactTool, ThinkResult, ToolCall } from "./types.js";
+import type { ChatMessage, ReactTool, ThinkResult, ToolCall } from "./types";
 
 // Think 层配置
 export interface ThinkOptions {

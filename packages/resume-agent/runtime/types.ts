@@ -1,4 +1,4 @@
-import type { ReactTool } from "@snowflake/ai";
+import type { ReactTool } from "@snowflake/agent";
 
 export const RESUME_AGENT_FACTS = {
   resumeIssuesResolved: "resume_issues_resolved", // 当前简历检查已没有剩余问题。

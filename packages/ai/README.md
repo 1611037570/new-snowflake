@@ -1,6 +1,6 @@
 # 通用 AI 基础包
 
-本包维护模型请求、流式解析、上下文编排和工具循环，不依赖简历、Web 组件或状态管理。
+本包维护模型请求、流式解析和上下文压缩，不依赖简历、Web 组件或状态管理；工具循环由 `@snowflake/agent` 负责。
 
 - `src/request/providers.ts` 集中处理服务商兼容差异。Gemini、Claude、千问使用官方 OpenAI Chat Completions 兼容入口，豆包使用火山方舟的聊天接口；新增服务商仍复用现有协议、传输和解析能力。
 - Gemini 的通用思考开关映射为 `reasoning_effort`，不能关闭思考的模型以低思考量运行；千问映射为 `enable_thinking`。Claude 兼容入口采用模型默认思考策略，不把简化的开关当作完整原生思考配置发送。

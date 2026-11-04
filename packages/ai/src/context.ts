@@ -1,4 +1,4 @@
-import type { ChatMessage } from "./react/types.js";
+import type { ChatMessage } from "./messages.js";
 import { AbortError } from "./errors.js";
 
 export interface ContextCompactionOptions {

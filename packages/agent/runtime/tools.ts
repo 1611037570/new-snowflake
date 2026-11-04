@@ -1,4 +1,4 @@
-import type { ReactTool } from "./types.js";
+import type { ReactTool } from "./types";
 
 // 工具注册表：按名称管理工具，执行器据此查找并调用
 export class ToolRegistry {

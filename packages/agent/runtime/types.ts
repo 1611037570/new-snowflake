@@ -1,5 +1,6 @@
 // ReAct（思考-执行-观察）编排层类型定义
-import type { ContextCompactionOptions } from "../context.js";
+import type { ChatMessage, ContextCompactionOptions, ToolCall } from "@snowflake/ai";
+export type { ChatMessage, ToolCall } from "@snowflake/ai";
 
 // 单个工具定义，遵循 OpenAI function calling 约定
 export interface ReactTool {
@@ -11,22 +12,6 @@ export interface ReactTool {
   parameters: Record<string, any>;
   // 执行函数，输入输出均可序列化，便于测试
   execute: (args: any) => unknown | Promise<unknown>;
-}
-
-// 模型输出的一次工具调用
-export interface ToolCall {
-  // 调用唯一标识，回填 tool 消息时使用
-  id: string;
-  // 函数类型，openai 协议固定为 function
-  type: string;
-  // 服务商返回的工具扩展元数据，下一轮原样回传以保留思考签名。
-  extra_content?: Record<string, unknown>;
-  function: {
-    // 工具名
-    name: string;
-    // 参数 JSON 字符串，流式分片累积后拼接
-    arguments: string;
-  };
 }
 
 // Think 层输出：一次模型推理的结果
@@ -47,7 +32,7 @@ export interface Observation {
   content: string;
 }
 
-// ReAct 运行配置，集中在 LLM.react 内部使用，避免污染单轮请求流程
+// ReAct 运行配置，由通用运行器使用，避免污染单轮请求流程
 export interface ReactConfig {
   // 可用工具列表
   tools: ReactTool[];
@@ -93,10 +78,3 @@ export interface ReactConfig {
   onFinal?: (answer: string) => void;
 }
 
-// 组装给模型的聊天消息
-export interface ChatMessage {
-  role: "system" | "user" | "assistant" | "tool";
-  content: string | null;
-  tool_calls?: ToolCall[];
-  tool_call_id?: string;
-}

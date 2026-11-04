@@ -1,5 +1,5 @@
 import { createAgent, createReferenceTool } from "@snowflake/agent";
-import type { ReactTool } from "@snowflake/ai";
+import type { ReactTool } from "@snowflake/agent";
 import { resumeIndustryKnowledge } from "@snowflake/resume-core";
 import { getInterviewModel } from "./model";
 import { getInterviewLocalReply } from "./flow";

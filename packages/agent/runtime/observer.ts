@@ -1,4 +1,4 @@
-import type { Observation, ToolCall } from "./types.js";
+import type { Observation, ToolCall } from "./types";
 
 /**
  * 把工具执行结果格式化为模型可读的观察文本

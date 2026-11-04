@@ -29,6 +29,7 @@
     "build:ext": "pnpm --filter @snowflake/ai build && vite build --mode extension"
   },
   "dependencies": {
+    "@snowflake/agent": "workspace:*",
     "@snowflake/ai": "workspace:*",
     "@snowflake/interview-agent": "workspace:*",
     "@snowflake/resume-agent": "workspace:*",

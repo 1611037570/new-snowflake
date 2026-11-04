@@ -1,6 +1,6 @@
-import type { ToolCall } from "./types.js";
-import type { ToolRegistry } from "./tools.js";
-import { ToolNotFoundError } from "../errors.js";
+import type { ToolCall } from "./types";
+import type { ToolRegistry } from "./tools";
+import { ToolNotFoundError } from "@snowflake/ai";
 
 // 将工具参数解析失败转换为可重试的工具观察结果
 function createToolArgumentFailure(toolName: string, error: unknown) {

@@ -1,4 +1,4 @@
-import type { ChatMessage, ReactTool } from "@snowflake/ai";
+import type { ChatMessage, ReactTool } from "@snowflake/agent";
 import { getResumeAiMessage } from "../request/messages";
 import { createResumeAgentSession } from "../runtime/resumeAgentSession";
 import type { ResumeAgentTool } from "../runtime/types";
