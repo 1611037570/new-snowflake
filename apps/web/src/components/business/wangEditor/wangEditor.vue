@@ -1,7 +1,7 @@
 <template>
   <div
     style=""
-    class="sf-wang-editor relative w-full rounded-2xl"
+    class="sf-wang-editor sf-wang-editor-theme relative w-full rounded-2xl"
     :class="[bg, sfBorder]"
     @mousedown.capture="handleLinkMenuMouseDown"
     @click.capture="handleLinkMenuClick"
@@ -10,6 +10,7 @@
     <div class="relative">
       <!-- 编辑器实例创建成功后再挂载工具栏，避免工具栏在 editor 就绪前初始化报错 -->
       <div v-if="editorRef" class="flex min-w-0 items-center">
+        <PastePlainTextToggle />
         <div class="min-w-0 flex-1">
           <Toolbar :editor="editorRef" :defaultConfig="toolbarConfig" :mode="mode" />
         </div>
@@ -71,13 +72,14 @@
     :before-close="guardExpandClose"
   >
     <div
-      class="flex h-[70vh] min-h-0 flex-col gap-3"
+      class="sf-wang-editor-theme flex h-[70vh] min-h-0 flex-col gap-3"
       @paste.capture="(event) => handleExternalPaste(event, expandEditorRef)"
       @mousedown.capture="handleLinkMenuMouseDown"
       @click.capture="(event) => handleLinkMenuClick(event, expandEditorRef)"
     >
       <!-- 弹窗工具栏与主编辑器共用同一份配置，实例就绪后再渲染 -->
       <div v-if="expandEditorRef" class="flex min-w-0 items-center rounded-2xl border border-sf-b px-3">
+        <PastePlainTextToggle />
         <div class="min-w-0 flex-1">
           <Toolbar :editor="expandEditorRef" :defaultConfig="expandToolbarConfig" :mode="mode" />
         </div>
@@ -116,6 +118,9 @@ import DOMPurify from "dompurify";
 import { ElMessage } from "element-plus";
 import { $t } from "@/locales";
 import { confirm } from "@/components/business/confirm";
+import PastePlainTextToggle from "./pastePlainTextToggle.vue";
+import { storeToRefs } from "pinia";
+import { useSystemStore } from "@/stores/modules/system";
 import {
   Editor,
   getSelectedEditorLink,
@@ -128,6 +133,8 @@ import { useFormReadyTask } from "../dynamicForm/api";
 // 富文本实际创建后才完成任务，异步代码下载完成不等于可编辑。
 const finishReady = useFormReadyTask();
 const sfBorder = inject("sfBorder", "");
+// 所有富文本实例读取系统设置中的同一个粘贴开关。
+const { pastePlainText } = storeToRefs(useSystemStore());
 
 const props = defineProps({
   height: {
@@ -343,13 +350,25 @@ const handleExternalPaste = (event, editor = editorRef.value) => {
   const data = event.clipboardData;
   if (!data) return;
   const html = data.getData("text/html");
+  const plainText = data.getData("text/plain");
+  // 开启时统一只插入剪贴板纯文本，图片等无文本内容仍走原有处理。
+  if (pastePlainText.value && plainText) {
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      editor.insertText(plainText);
+    } catch (error) {
+      console.error("[wangEditor] 纯文本粘贴失败", error);
+      ElMessage({ type: "error", message: $t("pasteContentLost"), grouping: true });
+    }
+    return;
+  }
   // 纯文本粘贴由编辑器内核正常处理，不介入。
   if (!html) return;
 
   event.preventDefault();
   event.stopPropagation();
 
-  const plainText = data.getData("text/plain");
   // 用正文快照判断是否真的插入成功：内核在过滤后没有可用节点时既不报错也不插入。
   const textBeforePaste = editor.getText();
   let insertError = null;
@@ -441,6 +460,18 @@ const confirmLink = async () => {
 </script>
 
 <style scoped lang="scss">
+// 主编辑器与展开弹窗中的工具栏、面板共用项目主题颜色。
+.sf-wang-editor-theme {
+  --w-e-toolbar-color: var(--color-sf-text);
+  --w-e-toolbar-bg-color: var(--color-sf-primary);
+  --w-e-toolbar-active-color: var(--color-sf-text);
+  --w-e-toolbar-active-bg-color: var(--color-sf-bg-2);
+  --w-e-toolbar-disabled-color: var(--color-sf-text-3);
+  --w-e-toolbar-border-color: var(--color-sf-b);
+  --w-e-modal-button-bg-color: var(--color-sf-bg);
+  --w-e-modal-button-border-color: var(--color-sf-b);
+}
+
 // ——————工具栏样式开始——————
 :deep(.w-e-bar svg) {
   fill: var(--color-sf-base);
@@ -464,9 +495,9 @@ const confirmLink = async () => {
   padding: 2px; // 工具项四周留白
 }
 :deep(.w-e-bar-item button) {
-  border-radius: 10px !important;
+  border-radius: 50% !important; // 悬停背景与新增开关保持圆形
   height: 24px; // 按钮高度
-  padding: 0 4px; // 按钮左右留白，控制按钮宽度
+  padding: 0 3px; // 宽度随图标内容撑开
 }
 // 选中态不铺背景底色，只让图标变成主题色
 :deep(.w-e-bar-item .active) {
@@ -475,16 +506,19 @@ const confirmLink = async () => {
     fill: var(--color-sf-theme);
   }
 }
-// 修改工具栏按钮hover样式：只给中性背景色反馈，图标不变色
+// 悬停时只改变图标颜色，避免不等宽按钮出现椭圆背景。
 :deep(.w-e-bar-item button:hover) {
-  background-color: var(--color-sf-bg-2);
+  background-color: transparent;
+  svg {
+    fill: var(--color-sf-theme);
+  }
 }
 // 修改工具栏按钮下拉菜单hover样式
 :deep(.w-e-menu-tooltip-v5) {
   &::before {
-    color: var(--color-sf-base);
-    background: var(--color-sf-page);
-    border: var(--color-sf-border) 1px solid;
+    color: var(--color-sf-text);
+    background: var(--color-sf-primary);
+    border: var(--color-sf-b) 1px solid;
     top: 28px; // 提示气泡与缩小后的工具项高度对齐
   }
   &:after {

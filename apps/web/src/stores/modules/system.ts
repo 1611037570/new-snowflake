@@ -15,6 +15,8 @@ export const useSystemStore = defineStore(
     const monitorWatch = ref<boolean>(false);
     // 性能模式
     const performanceMode = ref<boolean>(false);
+    // 粘贴时默认清除富文本格式
+    const pastePlainText = ref<boolean>(true);
     // 调试模式
     const debugMode = ref<boolean>(false);
     // 窗口大小
@@ -103,6 +105,7 @@ export const useSystemStore = defineStore(
       browserInfo,
       currentVersion,
       performanceMode,
+      pastePlainText,
       isConnected,
       canHover,
       getVersion,
@@ -113,7 +116,7 @@ export const useSystemStore = defineStore(
   {
     persist: {
       storage: localStorage,
-      pick: ["monitorWatch", "currentVersion", "performanceMode"],
+      pick: ["monitorWatch", "currentVersion", "performanceMode", "pastePlainText"],
     },
   },
 );

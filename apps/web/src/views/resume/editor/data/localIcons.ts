@@ -65,6 +65,7 @@ import MdiBriefcaseClockIcon from "@iconify-vue/mdi/briefcase-clock";
 import MdiCakeVariantIcon from "@iconify-vue/mdi/cake-variant";
 import MdiChatQuestionOutlineIcon from "@iconify-vue/mdi/chat-question-outline";
 import MdiCodeTagsIcon from "@iconify-vue/mdi/code-tags";
+import MdiContentPasteIcon from "@iconify-vue/mdi/content-paste";
 import MdiConsoleLineIcon from "@iconify-vue/mdi/console-line";
 import MdiCurrencyCnyIcon from "@iconify-vue/mdi/currency-cny";
 import MdiDatabaseOutlineIcon from "@iconify-vue/mdi/database-outline";
@@ -236,6 +237,7 @@ export const PROJECT_ICON_LIST: Record<string, Component> = {
   "mdi:cake-variant": MdiCakeVariantIcon,
   "mdi:chat-question-outline": MdiChatQuestionOutlineIcon,
   "mdi:code-tags": MdiCodeTagsIcon,
+  "mdi:content-paste": MdiContentPasteIcon,
   "mdi:console-line": MdiConsoleLineIcon,
   "mdi:currency-cny": MdiCurrencyCnyIcon,
   "mdi:database-outline": MdiDatabaseOutlineIcon,

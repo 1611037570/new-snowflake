@@ -50,6 +50,7 @@ export const ICON_LIST: Record<string, IconItem> = {
   "lucide:pause": { icon: "lucide:pause", name: "暂停" },
   "lucide:play": { icon: "lucide:play", name: "播放" },
   "lucide:briefcase": { icon: "lucide:briefcase" },
+  "mdi:content-paste": { icon: "mdi:content-paste", name: "粘贴格式设置" },
   "lucide:arrow-down-wide-narrow": { icon: "lucide:arrow-down-wide-narrow", name: "按时间排序" },
   "lucide:sliders-horizontal": { icon: "lucide:sliders-horizontal", name: "版式设置" },
   "lucide:circle-slash": { icon: "lucide:circle-slash", name: "清空选中" },
