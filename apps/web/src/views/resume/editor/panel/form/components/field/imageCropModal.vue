@@ -73,10 +73,11 @@ watch(() => props.aspectRatio, (ratio) => cropper?.setAspectRatio(ratio));
       />
     </div>
     <slot />
+    <!-- 裁切操作使用项目统一按钮，并保留原有禁用与点击行为。 -->
     <footer class="mt-3 flex justify-end gap-3">
-      <el-button :disabled="!cropperReady" @click="cropper?.reset()">{{ $t("resetCrop") }}</el-button>
-      <el-button @click="visible = false">{{ $t("cancel") }}</el-button>
-      <el-button type="primary" :disabled="!cropperReady" @click="emit('confirm', cropper)">{{ $t("confirmAction") }}</el-button>
+      <SfButton type="bg" :disabled="!cropperReady" @click="cropper?.reset()">{{ $t("resetCrop") }}</SfButton>
+      <SfButton type="bg" @click="visible = false">{{ $t("cancel") }}</SfButton>
+      <SfButton :disabled="!cropperReady" @click="emit('confirm', cropper)">{{ $t("confirmAction") }}</SfButton>
     </footer>
   </SfModal>
 </template>
