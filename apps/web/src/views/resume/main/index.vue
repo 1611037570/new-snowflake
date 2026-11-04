@@ -380,7 +380,7 @@ onMounted(async () => {
   // } catch {
   //   overview.value = null;
   // }
-  // 读取当前固定展示值，后续只替换存储适配入口即可接入后端。
+  // 首页使用固定展示值，实际次数单独由后端累计。
   try { aiServiceCount.value = (await getAiServiceOverview()).serviceCount; }
   catch { aiServiceCount.value = null; }
   // 三项累计数据就绪后一起启动，避免 AI 次数仍是空值时提前锁定零目标。

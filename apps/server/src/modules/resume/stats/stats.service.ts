@@ -37,6 +37,20 @@ export class StatsService {
     return { id: savedAction.id }
   }
 
+  // 单条记录通过数据库原子递增，避免并发上报互相覆盖。
+  async reportAiUsage() {
+    await this.actionRepository.query(
+      'INSERT INTO ai_usage_count (id, count) VALUES (1, 1) ON DUPLICATE KEY UPDATE count = count + 1',
+    )
+    return { success: true }
+  }
+
+  // 尚未收到上报时展示零次。
+  async getAiUsage() {
+    const rows = await this.actionRepository.query('SELECT count FROM ai_usage_count WHERE id = 1')
+    return { count: Number(rows[0]?.count ?? 0) }
+  }
+
   // 统计概览：访客与动作各自聚合，两张表不做关联
   async getOverview(days: number) {
     // 以服务端当天零点为分界，新增与活跃都按此口径统计

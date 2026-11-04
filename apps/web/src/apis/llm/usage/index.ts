@@ -1,4 +1,5 @@
 import { readonly, ref, shallowRef } from "vue";
+import { reportAiUsage } from "@/apis/request/modules/snowflake/stats";
 import type { AiAgentKey } from "@/stores/modules/ai";
 import {
   AI_USAGE_AGENTS,
@@ -87,6 +88,8 @@ export const finishAiUsage = (id: string, status: AiUsageStatus) => {
   const usage = active.get(id);
   if (!usage) return;
   active.delete(id); // 结束只结算一次，重复回调不重复累加
+  // 仅成功完成时上报一次，上报失败不影响模型调用。
+  if (status === "success") void reportAiUsage().catch(() => {});
   const tokens = usage.settled + resolveAiTokenTotal(usage.current);
   const succeeded = status === "success" ? 1 : 0;
   const modelKey = usage.model || "unknown"; // 模型缺失时归到同一占位项，避免出现空键

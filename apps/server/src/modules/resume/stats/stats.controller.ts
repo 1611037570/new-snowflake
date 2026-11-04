@@ -23,6 +23,20 @@ export class StatsController {
     return this.statsService.reportAction(reportActionDto)
   }
 
+  // 仅累计成功完成的 AI 使用次数。
+  @ApiOperation({ summary: '记录一次 AI 使用' })
+  @HttpCode(HttpStatus.OK)
+  @Post('ai-usage')
+  reportAiUsage() {
+    return this.statsService.reportAiUsage()
+  }
+
+  @ApiOperation({ summary: '获取 AI 使用次数' })
+  @Get('ai-usage')
+  getAiUsage() {
+    return this.statsService.getAiUsage()
+  }
+
   @ApiOperation({ summary: '简历统计概览' })
   @Get('overview')
   getOverview(@Query('days') days?: string) {

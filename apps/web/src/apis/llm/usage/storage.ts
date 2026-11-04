@@ -65,7 +65,7 @@ export const clearLegacyAiUsage = () => new Promise<void>((resolve) => {
   request.onblocked = () => resolve(); // 其他标签页占用时不阻塞页面加载
 });
 
-// 首页仅使用固定展示数据，不读取个人记录、不采集或上报使用信息。
+// 首页保留固定展示值，实际使用次数单独由后端累计。
 export const getAiServiceOverview = async (): Promise<AiServiceOverview> => ({
-  serviceCount: 32867, // 首版固定展示值，接入后端时只替换此读取入口。
+  serviceCount: 32867, // 首页展示值。
 });

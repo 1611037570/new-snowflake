@@ -51,6 +51,12 @@ export const reportAction = async (data: ReportActionParams) => {
   return response as { id: number };
 };
 
+// 只上报一次成功调用，不附带其他数据。
+export const reportAiUsage = async () => {
+  const response = await request.post({ url: "/resume/stats/ai-usage" });
+  if (response instanceof Error || response?.isAxiosError) throw response;
+};
+
 // 获取统计概览，days 为趋势天数（服务端默认 30，上限 90）
 export const getStatsOverview = async (days?: number) => {
   const response = await request.get({
