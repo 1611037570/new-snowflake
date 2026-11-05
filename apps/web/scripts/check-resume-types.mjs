@@ -6,7 +6,6 @@ const checkedPaths = [
   "packages/resume-agent/",
   "src/apis/llm/",
   "src/views/resume/assistant/",
-  "src/views/ai/chat/",
 ];
 const webRoot = fileURLToPath(new URL("../", import.meta.url));
 // 复用 type-check 脚本，保证与编辑器、构建使用同一套诊断

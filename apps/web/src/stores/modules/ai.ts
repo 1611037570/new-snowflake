@@ -1,6 +1,4 @@
 import { getUUID } from "@/utils";
-import { ElMessageBox } from "element-plus";
-import { useIDBKeyval } from "@vueuse/integrations/useIDBKeyval";
 import { del, get, set } from "idb-keyval";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
@@ -164,11 +162,6 @@ export const useAiStore = defineStore(
       resumeParser: "", // 简历解析绑定的模型编号。
     });
 
-    const sidebarCollapsed = ref(true);
-    const sidebarMode = ref("float"); // 'dock' or 'float'
-    // 对话列表使用 IndexedDB 持久化，替代 localStorage
-    const { data: chatList } = useIDBKeyval<Chat[]>("chat-list", []);
-    const currentChatId = ref<string>("");
     // 是否开启思考模式：默认快速模式，需要深度思考时由开关开启
     const thinkMode = ref<boolean>(false);
     // 当前简历助手对话只在运行时加载，正文按会话 ID 独立保存到 IndexedDB
@@ -180,18 +173,6 @@ export const useAiStore = defineStore(
       ),
     );
 
-    const currentChat = computed(() => chatList.value.find((c) => c.id === currentChatId.value));
-
-    const currentMessages = computed({
-      get: () => currentChat.value?.messages || [],
-      set: (val) => {
-        if (currentChat.value) currentChat.value.messages = val;
-      },
-    });
-
-    function prepareNewChat() {
-      currentChatId.value = "new-chat-temp";
-    }
     // 创建默认对话
     function createDefaultChat(message?: any): Chat {
       // 当前时间戳
@@ -244,12 +225,6 @@ export const useAiStore = defineStore(
         message.id = id;
         ids.add(id);
       });
-    }
-    function addChat() {
-      const newChat = createDefaultChat();
-      chatList.value.unshift(newChat);
-      currentChatId.value = newChat.id;
-      return newChat;
     }
     // 注册简历助手会话工厂，供“新建话题”等入口直接调用
     function registerResumeAssistantChatFactory(factory: () => Chat) {
@@ -359,48 +334,6 @@ export const useAiStore = defineStore(
       chat.title = content.length > 15 ? `${content.slice(0, 15)}...` : content;
     }
 
-    function switchChat(id: string) {
-      currentChatId.value = id;
-    }
-
-    function delChat(id: string) {
-      ElMessageBox.confirm("确定要删除该对话记录吗？此操作不可恢复。", "删除对话", {
-        type: "warning",
-      })
-        .then(() => {
-          const index = chatList.value.findIndex((c) => c.id === id);
-          if (index > -1) {
-            chatList.value.splice(index, 1);
-            if (currentChatId.value === id) {
-              currentChatId.value = chatList.value[0]?.id || "";
-            }
-          }
-        })
-        .catch(() => {});
-    }
-
-    function updateChatTitle() {
-      const chat = currentChat.value;
-      if (!chat || chat.title !== DEFAULT_CHAT_TITLE) return;
-
-      const firstUserMsg = chat.messages.find((m) => m.role === "user");
-      if (firstUserMsg) {
-        const content = firstUserMsg.content;
-        chat.title = content.length > 15 ? `${content.slice(0, 15)}...` : content;
-      }
-    }
-
-    function addMessage(msg: any) {
-      if (!currentChat.value) addChat();
-      const defaultMessage = createDefaultMessage();
-      currentChat.value!.messages.push({
-        ...defaultMessage,
-        ...msg,
-      });
-      currentChat.value!.updateTime = Date.now();
-      updateChatTitle();
-    }
-
     // ========== 模型管理方法 ==========
 
     // 保存用户明确提交的服务商配置，不覆盖已有模型的独立配置。
@@ -461,12 +394,6 @@ export const useAiStore = defineStore(
     }
 
     return {
-      sidebarCollapsed,
-      sidebarMode,
-      chatList,
-      currentChatId,
-      currentChat,
-      currentMessages,
       modelList,
       providerCredentials,
       agentModels,
@@ -475,7 +402,6 @@ export const useAiStore = defineStore(
       resumeAssistantChatList,
       createDefaultChat,
       createDefaultMessage,
-      addChat,
       registerResumeAssistantChatFactory,
       initializeResumeAssistantChat,
       createNewResumeAssistantChat,
@@ -486,10 +412,6 @@ export const useAiStore = defineStore(
       removeResumeAssistantChats,
       clearCurrentResumeAssistantChat,
       updateResumeAssistantChatTitle,
-      prepareNewChat,
-      switchChat,
-      delChat,
-      addMessage,
       deployModel,
       saveProviderCredential,
       deleteModel,
@@ -505,8 +427,6 @@ export const useAiStore = defineStore(
       // 简历助手对话一并持久化到 localStorage，刷新后可恢复最近对话
       storage: localStorage,
       pick: [
-        "sidebarMode",
-        "currentChatId",
         "modelList",
         "providerCredentials",
         "agentModels",

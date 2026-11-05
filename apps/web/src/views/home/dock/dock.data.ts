@@ -32,18 +32,6 @@ const list = [
     component: defineAsyncComponent(() => import("./components/setting.vue")),
     type: "system",
   },
-  {
-    name: "便签",
-    component: defineAsyncComponent(() => import("./components/note.vue")),
-    type: "page",
-    page: "note",
-  },
-  {
-    name: "密码箱",
-    component: defineAsyncComponent(() => import("./components/passwordBox.vue")),
-    type: "page",
-    page: "passwordBox",
-  },
 ];
 
 const showList = list.filter((item: any) => {

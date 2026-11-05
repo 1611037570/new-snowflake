@@ -18,13 +18,8 @@ export * from "./modules/cache";
 // 主题相关store
 export * from "./modules/theme";
 
-// 便签相关store
-export * from "./modules/note";
-
 // 用户相关store
 export * from "./modules/user";
-// 密码相关store
-export * from "./modules/password";
 
 // 智能助手相关store
 export * from "./modules/ai";

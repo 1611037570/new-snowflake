@@ -7,7 +7,6 @@ export const BASE_ROUTES = [
   { name: "icon" },
   { name: "color" },
   { name: "components" },
-  { name: "data" },
   { name: "init", hidden: true },
 ];
 /**
@@ -38,14 +37,7 @@ export const PROJECT_ROUTES = [
  * 包含简单小游戏和实用工具路由
  */
 export const MUSE_ROUTES = [
-  { name: "2048" },
-  { name: "sort" },
   { name: "checklist" },
-  { name: "note" },
-  { name: "passwordBox" },
-  { name: "reborn" },
-  { name: "time" },
-  { name: "ai" },
   { name: "llmMonitor" },
   { name: "test" },
 ];

@@ -30,20 +30,12 @@
     <Dock />
     <!-- 游戏组件 -->
     <Game />
-    <SfPermission permission="note">
-      <!-- 置顶便签组件 -->
-      <NoteHomeTop />
-      <!-- 便签组件 -->
-      <NoteHomeModal />
-    </SfPermission>
-    <PasswordHomeModal />
     <SettingModal />
   </div>
 </template>
 
 <script setup>
 import { useHomeStore } from "@/stores";
-import { permissionAsyncComponent } from "@/utils";
 import { storeToRefs } from "pinia";
 // 基础组件 - 页面加载时需要的组件
 
@@ -59,13 +51,7 @@ const Quote = defineAsyncComponent(() => import("./components/quote.vue"));
 const SettingModal = defineAsyncComponent(() => import("./setting/modal.vue"));
 const Game = defineAsyncComponent(() => import("./games/index.vue"));
 const Shortcut = defineAsyncComponent(() => import("./shortcut/index.vue"));
-const NoteHomeModal = defineAsyncComponent(() => import("@views/note/homeModal.vue"));
-const NoteHomeTop = defineAsyncComponent(() => import("@views/note/homeTop.vue"));
 
-const PasswordHomeModal = permissionAsyncComponent(
-  "passwordBox",
-  () => import("@/views/passwordBox/homeModal.vue"),
-);
 const homeStore = useHomeStore();
 const { tabIndex } = storeToRefs(homeStore);
 const searchStore = useHomeStore();

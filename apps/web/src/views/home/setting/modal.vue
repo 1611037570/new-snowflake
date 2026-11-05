@@ -60,7 +60,6 @@
           />
         </SfSetBox>
       </template>
-      <Note v-else-if="currentTab === 'note'" />
       <template v-else-if="currentTab === 'search'">
         <SfSetTitle title="搜索设置" />
         <ModalSearch />
@@ -79,7 +78,6 @@
 import { useHomeStore } from "@/stores";
 import { storeToRefs } from "pinia";
 import ModalSearch from "./modalSearch.vue";
-import Note from "./model/note.vue";
 
 const homeStore = useHomeStore();
 const searchStore = useHomeStore();
@@ -118,10 +116,6 @@ const list = [
   {
     name: "娱乐",
     value: "game",
-  },
-  {
-    name: "便签",
-    value: "note",
   },
 ];
 
