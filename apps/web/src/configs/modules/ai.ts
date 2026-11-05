@@ -8,6 +8,8 @@ export const PROVIDER_NAMES: Record<string, string> = {
   gemini: "Gemini", // Google Gemini 兼容接口。
   claude: "Claude", // Claude 官方兼容接口。
   qwen: "千问 Qwen", // 阿里云百炼兼容接口。
+  zhipu: "智谱 GLM", // 智谱开放平台。
+  moonshot: "月之暗面 Kimi", // 月之暗面开放平台。
 };
 
 // 内置雪花服务配置

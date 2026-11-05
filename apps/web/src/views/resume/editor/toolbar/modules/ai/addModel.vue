@@ -80,6 +80,16 @@ const providerTemplates: ProviderTemplate[] = [
     name: PROVIDER_NAMES.qwen, // 服务商展示名称。
     defaultUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", // 默认北京地域的完整请求地址。
   },
+  {
+    id: "zhipu", // 智谱开放平台标识。
+    name: PROVIDER_NAMES.zhipu, // 服务商展示名称。
+    defaultUrl: "https://open.bigmodel.cn/api/paas/v4/chat/completions", // 智谱对话补全接口。
+  },
+  {
+    id: "moonshot", // 月之暗面开放平台标识。
+    name: PROVIDER_NAMES.moonshot, // 服务商展示名称。
+    defaultUrl: "https://api.moonshot.cn/v1/chat/completions", // 月之暗面对话补全接口。
+  },
 ];
 // 各服务商获取 Key 的链接
 const keyLinks: Record<string, string> = {
@@ -89,6 +99,8 @@ const keyLinks: Record<string, string> = {
   gemini: "https://aistudio.google.com/apikey", // Gemini 官方密钥管理页。
   claude: "https://platform.claude.com/settings/keys", // Claude 官方密钥管理页。
   qwen: "https://bailian.console.aliyun.com/", // 阿里云百炼控制台。
+  zhipu: "https://open.bigmodel.cn/", // 智谱开放平台。
+  moonshot: "https://platform.moonshot.cn/", // 月之暗面开放平台。
 };
 
 // 单一服务商界面只保留配置草稿，自定义模型通过弹窗添加。
@@ -107,10 +119,6 @@ interface ConnectionState {
 interface ProviderSession {
   /** 尚未提交的配置和自定义模型草稿。 */
   form: ProviderForm;
-  /** 按模型名称或别名筛选的关键词。 */
-  search: string;
-  /** 是否展开接口地址设置。 */
-  advanced: boolean;
   /** 各模型在本次设置会话中的检测结果。 */
   connections: Record<string, ConnectionState>;
 }
@@ -171,8 +179,6 @@ function createSession(provider: ProviderTemplate): ProviderSession {
       model: "", // 自定义模型初始留空。
       name: "", // 可选别名初始留空。
     },
-    search: "", // 初始展示全部模型。
-    advanced: false, // 接口地址按需展开。
     connections: {}, // 检测结果仅在本次会话中保留。
   };
 }
@@ -217,7 +223,7 @@ function persistCredential() {
   });
 }
 
-// 仅展示当前服务商下已添加的模型。
+// 直接展示当前服务商下的全部已添加模型。
 const modelCards = computed<ModelCard[]>(() => {
   const saved = getProviderModels(currentProvider.value);
   const cards: ModelCard[] = saved.map((model) => ({
@@ -226,8 +232,7 @@ const modelCards = computed<ModelCard[]>(() => {
     name: model.name || model.model, // 别名优先用于展示。
     saved: model, // 检测与删除都使用该条目自己的配置。
   }));
-  const keyword = session.value.search.trim().toLowerCase();
-  return cards.filter((card) => `${card.name} ${card.model}`.toLowerCase().includes(keyword));
+  return cards;
 });
 
 // 新请求只从已保存的凭据构造，修改中的草稿不会被直接用于请求。
@@ -317,7 +322,7 @@ async function testModel(model: string, add = false, alias = "", saved?: ModelIt
     target.form.model = "";
     target.form.name = "";
     customVisible.value = false;
-    ElMessage.success("模型添加成功，可在上方分配给角色");
+    ElMessage.success("模型添加成功，可在角色模型中分配");
   } catch (error: unknown) {
     if (disposed) return;
     target.connections[cardKey] = {
@@ -337,7 +342,7 @@ function handleAddBuiltin() {
     return;
   }
   aiStore.deployModel({ ...preset, builtin: true });
-  ElMessage.success("模型添加成功，可在上方分配给角色");
+  ElMessage.success("模型添加成功，可在角色模型中分配");
 }
 
 // 删除操作仍使用原有确认机制，并由模型仓库同步解绑角色。
@@ -355,88 +360,91 @@ provide("bg", "bg-sf-bg");
 </script>
 
 <template>
-  <!-- 侧栏按内容留足宽度，与主区域共用底色，只有选中项显示背景反馈。 -->
-  <div class="grid min-w-0 grid-cols-1 overflow-hidden rounded-2xl border border-sf-b bg-sf-primary md:grid-cols-[minmax(240px,max-content)_minmax(0,1fr)]">
-    <nav class="flex gap-[6px] overflow-x-auto border-b border-sf-b p-3 md:flex-col md:overflow-visible md:border-r md:border-b-0" aria-label="选择服务商">
-      <button v-for="provider in providerList" :key="provider.id" type="button" class="flex min-w-0 shrink-0 cursor-pointer items-center gap-3 rounded-xl border p-3 text-left md:w-full transition-colors disabled:cursor-wait disabled:opacity-60" :class="selectedProvider === provider.id ? 'border-sf-b bg-sf-bg text-sf-text' : 'border-transparent text-sf-text-2 hover:bg-sf-bg'" :aria-pressed="selectedProvider === provider.id" :disabled="busy" @click="selectProvider(provider)">
-        <SfIcon :icon="getProviderIcon(provider.id, provider.builtin)" size="6" box-size="9" class="shrink-0" />
-        <span class="min-w-0 flex-1">
-          <span class="block text-sm leading-6 font-medium [overflow-wrap:anywhere]">{{ provider.name }}</span>
-          <span class="mt-[3px] flex items-center gap-[6px] whitespace-nowrap text-xs" :class="getCredential(provider)?.key.trim() || (provider.builtin && getProviderModels(provider).length) ? 'text-sf-success' : 'text-sf-text-3'">
-            <span class="h-[6px] w-[6px] rounded-full bg-current" />
-            {{ getCredential(provider)?.key.trim() || (provider.builtin && getProviderModels(provider).length) ? '已配置' : provider.builtin ? '内置服务' : '待完善配置' }}
-          </span>
-        </span>
+  <!-- 服务商使用下划线导航，下方配置和模型列表保持连续阅读顺序。 -->
+  <section class="provider-workspace min-w-0">
+    <header class="px-3 pt-3">
+      <h2 class="text-sm font-semibold text-sf-text">模型接入</h2>
+    </header>
+    <nav class="flex flex-wrap gap-x-3 border-b border-sf-b px-3" aria-label="选择服务商">
+      <!-- 悬停时用文字和下划线提示可切换服务商。 -->
+      <button v-for="provider in providerList" :key="provider.id" type="button" class="flex min-w-0 cursor-pointer items-center gap-[6px] border-b-2 py-3 text-xs transition-colors disabled:cursor-wait disabled:opacity-60" :class="selectedProvider === provider.id ? 'border-sf-theme font-medium text-sf-theme' : 'border-transparent text-sf-text-2 hover:border-sf-theme hover:text-sf-theme'" :aria-pressed="selectedProvider === provider.id" :disabled="busy" @click="selectProvider(provider)">
+        <!-- 雪花服务图标使用主题色。 -->
+        <SfIcon :icon="getProviderIcon(provider.id, provider.builtin)" size="4" class="shrink-0" :class="{ 'text-sf-theme': provider.builtin }" />
+        <span>{{ provider.name }}</span>
+        <span v-if="getCredential(provider)?.key.trim() || (provider.builtin && getProviderModels(provider).length)" class="h-[6px] w-[6px] shrink-0 rounded-full bg-sf-success" aria-label="已配置" />
       </button>
     </nav>
 
-    <section class="flex min-w-0 flex-col gap-3 p-3">
-      <header class="flex flex-wrap items-center justify-between gap-3 border-b border-sf-b pb-3">
-        <div class="flex min-w-0 items-center gap-3">
-          <SfIcon :icon="getProviderIcon(currentProvider.id, currentProvider.builtin)" size="6" box-size="12" class="shrink-0 rounded-xl border border-sf-b bg-sf-bg" />
-          <h3 class="text-lg font-semibold text-sf-text">{{ currentProvider.name }}</h3>
-        </div>
-        <a v-if="keyLink" :href="keyLink" target="_blank" rel="noopener noreferrer" class="inline-flex h-9 items-center rounded-lg border border-sf-b px-3 text-xs text-sf-text-2 transition-colors hover:bg-sf-bg hover:text-sf-text">获取密钥 ↗</a>
-      </header>
-
-      <template v-if="!currentProvider.builtin">
-        <!-- 密钥与接口地址随输入自动保存，不增加额外确认操作。 -->
-        <div class="flex flex-col gap-[6px]">
-          <label :for="`provider-key-${selectedProvider}`" class="text-sm font-medium text-sf-text">API 密钥</label>
-          <SfInput :id="`provider-key-${selectedProvider}`" v-model="form.key" type="password" show-password class="h-9 w-full rounded-lg! border border-sf-b" placeholder="填入该服务商的 API Key" :disabled="busy" />
-        </div>
-        <section class="rounded-xl border border-sf-b p-3">
-          <button type="button" class="flex w-full cursor-pointer items-center justify-between gap-3 text-left text-xs text-sf-text-2 hover:text-sf-text" :aria-expanded="session.advanced" @click="session.advanced = !session.advanced">
-            <span>接口地址</span>
-            <SfIcon icon="mingcute:down-line" size="4" box-size="6" :class="{ 'rotate-180': session.advanced }" />
-          </button>
-          <div v-if="session.advanced" class="mt-3 flex flex-col gap-[6px]">
-            <SfInput v-model="form.url" class="h-9 w-full rounded-lg! border border-sf-b" :placeholder="currentProvider.defaultUrl" aria-label="完整接口地址" :disabled="busy" />
+    <div class="flex min-w-0 flex-col gap-3 p-3">
+      <!-- 连接配置由外层统一留白，与下方模型区域对齐，输入控件保留自身边框。 -->
+      <section class="flex min-w-0 flex-col gap-3 bg-sf-primary">
+        <header class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex min-w-0 items-center gap-[6px]">
+            <!-- 详情中的雪花服务图标与导航保持一致。 -->
+            <SfIcon :icon="getProviderIcon(currentProvider.id, currentProvider.builtin)" size="5" box-size="9" class="shrink-0 rounded-lg bg-sf-primary" :class="{ 'text-sf-theme': currentProvider.builtin }" />
+            <h3 class="text-sm font-semibold text-sf-text">{{ currentProvider.name }}</h3>
+            <span v-if="!currentProvider.builtin" class="rounded-full px-[6px] py-[3px] text-[11px]" :class="credentialReady ? 'bg-sf-success-2 text-sf-success' : 'bg-sf-primary text-sf-text-3'">{{ credentialReady ? '已保存' : '待配置' }}</span>
           </div>
-        </section>
-      </template>
-      <p v-else class="text-xs leading-6 text-sf-text-2">内置配置无需填写密钥，添加后即可在上方为角色选择模型。</p>
-
-      <header class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-[6px]">
-          <h4 class="text-sm font-semibold text-sf-text">可用模型</h4>
-          <span class="rounded-full bg-sf-bg px-3 py-[3px] text-xs text-sf-text-3 tabular-nums">{{ currentProvider.builtin && !modelCards.length ? 1 : modelCards.length }} 个模型</span>
+          <!-- 获取密钥入口沿用按钮的圆角。 -->
+          <a v-if="keyLink" :href="keyLink" target="_blank" rel="noopener noreferrer" class="rounded-xl bg-sf-primary px-3 py-[6px] text-xs text-sf-theme transition-colors hover:bg-sf-theme-3">获取密钥 ↗</a>
+        </header>
+        <div v-if="!currentProvider.builtin" class="connection-fields grid min-w-0 items-start gap-3">
+          <div class="flex min-w-0 flex-col gap-[6px]">
+            <label :for="`provider-key-${selectedProvider}`" class="text-xs font-medium text-sf-text">API 密钥</label>
+            <SfInput :id="`provider-key-${selectedProvider}`" v-model="form.key" type="password" show-password class="h-9 w-full rounded-lg! border border-sf-b bg-sf-bg!" placeholder="填入该服务商的 API Key" :disabled="busy" />
+          </div>
+          <div class="flex min-w-0 flex-col gap-[6px]">
+            <span class="text-xs font-medium text-sf-text">接口地址</span>
+            <!-- 接口地址直接展示，方便查看和修改。 -->
+            <SfInput v-model="form.url" class="h-9 w-full rounded-lg! border border-sf-b bg-sf-bg!" :placeholder="currentProvider.defaultUrl" aria-label="完整接口地址" :disabled="busy" />
+          </div>
         </div>
-        <div v-if="!currentProvider.builtin" class="flex flex-wrap gap-3">
-          <SfButton :round="false" type="bg" border :disabled="busy || !credentialReady" @click="openCustomModel">添加模型</SfButton>
-        </div>
-      </header>
-      <SfInput v-if="getProviderModels(currentProvider).length > 1" v-model="session.search" class="h-9 w-full rounded-lg! border border-sf-b" placeholder="搜索模型名称" aria-label="搜索模型名称" />
+        <p v-else class="text-xs leading-6 text-sf-text-2">内置配置无需填写密钥，添加后即可为角色选择模型。</p>
+      </section>
 
-      <div v-if="modelCards.length" class="grid gap-3 lg:grid-cols-2">
-        <article v-for="card in modelCards" :key="card.key" class="flex min-w-0 flex-col gap-3 rounded-xl border border-sf-b p-3 transition-colors hover:border-sf-theme">
-          <header class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-              <h5 class="break-all text-sm leading-6 font-semibold text-sf-text">{{ card.name }}</h5>
-              <p v-if="card.name !== card.model" class="mt-[6px] break-all text-xs text-sf-text-3">{{ card.model }}</p>
+      <!-- 已添加模型以独立边框明确各条配置及其操作范围。 -->
+      <section class="flex min-w-0 flex-col gap-3">
+        <header class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-baseline gap-[6px]">
+            <h4 class="text-sm font-semibold text-sf-text">已接入模型</h4>
+            <span class="text-xs text-sf-text-3 tabular-nums">{{ modelCards.length }} 个</span>
+          </div>
+          <SfButton v-if="!currentProvider.builtin" :round="false" :disabled="busy || !credentialReady" @click="openCustomModel">添加模型</SfButton>
+        </header>
+        <div v-if="modelCards.length" class="flex flex-col gap-3">
+          <article v-for="card in modelCards" :key="card.key" class="flex min-w-0 flex-col gap-3 rounded-xl border border-sf-b p-3">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0 flex-1 basis-[180px]">
+                <h5 class="break-all text-sm leading-6 font-medium text-sf-text">{{ card.name }}</h5>
+                <p v-if="card.name !== card.model" class="mt-[3px] break-all font-mono text-xs text-sf-text-3">{{ card.model }}</p>
+              </div>
+              <div class="flex shrink-0 items-center gap-3">
+                <SfButton :round="false" type="bg" :disabled="busy" :aria-busy="testingModel === card.key" @click="testModel(card.model, false, '', card.saved)">{{ testingModel === card.key ? '检测中…' : '检测连接' }}</SfButton>
+                <!-- 删除操作默认与检测连接一致，悬停时提示危险操作。 -->
+                <SfButton :round="false" type="bg" class="hover:bg-sf-error! hover:text-white!" :disabled="busy" @click="removeModel(card.saved)">删除</SfButton>
+              </div>
             </div>
-            <span class="shrink-0 rounded bg-sf-success-2 px-[6px] py-[3px] text-[11px] text-sf-success">已添加</span>
-          </header>
-          <div v-if="props.bindings[card.saved.id]?.length" class="flex flex-wrap gap-[6px]">
-            <span v-for="role in props.bindings[card.saved.id]" :key="role" class="rounded bg-sf-theme-3 px-[6px] py-[3px] text-[11px] text-sf-theme">{{ role }}</span>
-          </div>
-          <p v-if="session.connections[card.key]" role="status" class="break-words text-xs leading-6" :class="session.connections[card.key].status === 'success' ? 'text-sf-success' : session.connections[card.key].status === 'error' ? 'text-sf-error' : 'text-sf-text-2'">{{ session.connections[card.key].message }}</p>
-          <footer class="mt-auto flex flex-wrap items-center gap-3 border-t border-sf-b pt-3">
-            <SfButton :round="false" type="bg" border :disabled="busy" :aria-busy="testingModel === card.key" @click="testModel(card.model, false, '', card.saved)">{{ testingModel === card.key ? '检测中…' : '检测连接' }}</SfButton>
-            <button type="button" class="ml-auto cursor-pointer rounded px-[6px] py-[3px] text-xs text-sf-text-3 transition-colors hover:bg-sf-error-2 hover:text-sf-error" :disabled="busy" @click="removeModel(card.saved)">删除</button>
-          </footer>
-        </article>
-      </div>
-      <article v-else-if="currentProvider.preset" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-sf-b p-3">
-        <div class="min-w-0">
-          <h5 class="text-sm font-semibold text-sf-text">{{ currentProvider.name }}</h5>
-          <p class="mt-[6px] break-all text-xs text-sf-text-3">{{ currentProvider.preset.model }}</p>
+            <div class="flex flex-wrap items-center gap-[6px]">
+              <template v-if="props.bindings[card.saved.id]?.length">
+                <span class="text-[11px] text-sf-text-3">用于</span>
+                <span v-for="role in props.bindings[card.saved.id]" :key="role" class="rounded-full bg-sf-theme-3 px-[6px] py-[3px] text-[11px] text-sf-theme">{{ role }}</span>
+              </template>
+              <span v-else class="text-xs text-sf-text-3">暂未分配给角色</span>
+            </div>
+            <p v-if="session.connections[card.key]" role="status" class="break-words text-xs leading-6" :class="session.connections[card.key].status === 'success' ? 'text-sf-success' : session.connections[card.key].status === 'error' ? 'text-sf-error' : 'text-sf-text-2'">{{ session.connections[card.key].message }}</p>
+          </article>
         </div>
-        <SfButton :round="false" @click="handleAddBuiltin">添加模型</SfButton>
-      </article>
-      <p v-else class="rounded-lg bg-sf-bg p-3 text-xs leading-6 text-sf-text-2">{{ !credentialReady ? '请先填写 API 密钥并检查接口地址。' : session.search ? '没有匹配的模型，请更换关键词。' : '暂无模型，点击“添加模型”填写模型信息。' }}</p>
-    </section>
-  </div>
+        <article v-else-if="currentProvider.preset" class="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-sf-bg p-3">
+          <div class="min-w-0">
+            <h5 class="text-sm font-medium text-sf-text">{{ currentProvider.name }}</h5>
+            <p class="mt-[6px] break-all text-xs text-sf-text-3">{{ currentProvider.preset.model }}</p>
+          </div>
+          <SfButton :round="false" @click="handleAddBuiltin">添加模型</SfButton>
+        </article>
+        <p v-else class="rounded-lg border border-dashed border-sf-b p-3 text-xs leading-6 text-sf-text-2">{{ !credentialReady ? '请先填写连接配置，再添加模型。' : '暂无模型，点击“添加模型”填写模型信息。' }}</p>
+      </section>
+    </div>
+  </section>
 
   <!-- 模型标识用于接口调用，展示别名单独填写；接入点提示仅对豆包展示。 -->
   <SfModal v-model="customVisible" :title="`${currentProvider.name} · 添加模型`" width="480px" :before-close="() => !busy">
@@ -459,3 +467,16 @@ provide("bg", "bg-sf-bg");
     </div>
   </SfModal>
 </template>
+
+<style scoped>
+/* 连接配置按容器宽度排列，模型列表始终沿页面纵向展开。 */
+.provider-workspace {
+  container-type: inline-size;
+}
+
+@container (min-width: 600px) {
+  .connection-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+</style>

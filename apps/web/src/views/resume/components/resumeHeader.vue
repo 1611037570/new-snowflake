@@ -131,8 +131,9 @@ watch([() => route.path, isMobile], () => {
       :logo-size="6"
       url="/resume"
     />
-    <!-- 按功能分组陈列，组标题用说明文字区分层次，条目保持紧凑居中。 -->
-    <nav class="flex min-h-0 flex-1 flex-col overflow-y-auto p-3" :aria-label="$t('resumeNavTitle')">
+    <!-- 导航复用滚动条横向间距，分组标题与上下条目保持一致间距。 -->
+    <SfScrollbar class="min-h-0 flex-1">
+    <nav class="flex flex-col py-3" :aria-label="$t('resumeNavTitle')">
       <div
         v-for="group in navGroups"
         :key="group.key || group.items[0].path"
@@ -153,6 +154,7 @@ watch([() => route.path, isMobile], () => {
         </router-link>
       </div>
     </nav>
+    </SfScrollbar>
     <!-- 完整交互区域继续由图标盒子承接，功能按钮统一放在侧栏底部，由两端对齐分配间距。 -->
     <footer class="flex shrink-0 items-center justify-between border-t border-sf-b p-3">
       <GithubStars size="5" :box-size="9" class="rounded-lg" />
@@ -185,13 +187,15 @@ watch([() => route.path, isMobile], () => {
     :title="$t('resumeNavTitle')"
     direction="ltr"
     size="min(80vw, 216px)"
-    :body-class="'p-3!'"
+    :body-class="'overflow-hidden! p-0!'"
     :header-class="'m-0! p-3!'"
     :footer-class="'border-t border-sf-b p-3!'"
     append-to-body
     destroy-on-close
   >
-    <nav class="flex flex-col text-sf-text">
+    <!-- 移动导航同步保持分组标题上下间距一致。 -->
+    <SfScrollbar class="min-h-0">
+    <nav class="flex flex-col py-3 text-sf-text">
       <div
         v-for="group in navGroups"
         :key="group.key || group.items[0].path"
@@ -212,6 +216,7 @@ watch([() => route.path, isMobile], () => {
         </router-link>
       </div>
     </nav>
+    </SfScrollbar>
     <template #footer>
       <div class="flex items-center justify-between gap-3">
         <GithubStars size="5" :box-size="9" class="rounded-lg" />

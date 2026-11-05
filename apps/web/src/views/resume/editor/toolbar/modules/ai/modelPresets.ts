@@ -11,6 +11,21 @@ export interface ModelPreset {
 // 仅提供添加时的常用型号，用户添加后的配置由用户自行维护。
 export const MODEL_PRESETS: ModelPreset[] = [
   {
+    provider: "zhipu", // 智谱开放平台。
+    model: "glm-5.3", // 智谱旗舰模型调用名。
+    name: "GLM-5.3", // 默认展示名称。
+  },
+  {
+    provider: "zhipu", // 智谱开放平台。
+    model: "glm-5.3-flash", // 智谱快速模型调用名。
+    name: "GLM-5.3 Flash", // 默认展示名称。
+  },
+  {
+    provider: "moonshot", // 月之暗面开放平台。
+    model: "kimi-k2.6", // 月之暗面模型调用名。
+    name: "Kimi K2.6", // 默认展示名称。
+  },
+  {
     provider: "openai", // OpenAI 官方与兼容服务。
     model: "gpt-5.4", // 官方模型 ID。
     name: "GPT-5.4", // 默认展示名称。

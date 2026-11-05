@@ -8,6 +8,15 @@ export function prepareProviderOptions(
   if (protocol !== "chatCompletions") return result;
 
   const thinking = result.thinking;
+  // 智谱新模型不能关闭思考，快速模式改用低思考强度。
+  if (provider === "zhipu" && /^glm-5\.3(?:$|-)/i.test(result.model) && thinking?.type === "disabled") {
+    result.thinking = { ...thinking, type: "enabled" };
+    result.reasoning_effort ??= "low";
+  }
+  // 月之暗面工具调用关闭思考，兼容指定工具与多轮工具结果。
+  if (provider === "moonshot" && /^kimi-k2\.6(?:$|-)/i.test(result.model) && result.tools?.length) {
+    result.thinking = { type: "disabled" };
+  }
   if (thinking && ["gemini", "qwen", "claude"].includes(provider)) {
     // 通用思考开关不是这些兼容接口的通用字段，转换后不再直接透传。
     if (provider === "gemini") {

@@ -24,7 +24,8 @@
     >
       <!-- 选项可提供通用图标，模型列表与其他下拉共用展示能力。 -->
       <span v-if="item.icon" class="flex min-w-0 items-center gap-[9px]">
-        <SfIcon :icon="item.icon" size="5" class="shrink-0" />
+        <!-- 选项可指定图标颜色，保持服务商标识一致。 -->
+        <SfIcon :icon="item.icon" size="5" class="shrink-0" :class="item.iconClass" />
         <span class="truncate">{{ item.name }}</span>
       </span>
       <template v-else>{{ item.name }}</template>
@@ -61,6 +62,8 @@ type SelectOption = {
   name: string;
   // 可选图标标识，不提供时沿用纯文字展示。
   icon?: string;
+  // 可选图标颜色样式。
+  iconClass?: string;
 };
 
 defineProps({

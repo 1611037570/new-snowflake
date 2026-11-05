@@ -4,8 +4,10 @@ import AiProviderSettingsContent from "../../editor/toolbar/modules/ai/content.v
 </script>
 
 <template>
-  <SfScrollbar class="h-full bg-sf-page" flush>
-    <main class="flex min-h-full w-full flex-col gap-3 p-3 text-sf-text">
+  <!-- 路由外壳限制可用高度，内部内容禁止收缩，溢出统一交给滚动条。 -->
+  <div class="flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-sf-page">
+  <SfScrollbar class="min-h-0 flex-1" flush always>
+    <main class="flex min-h-full w-full shrink-0 flex-col gap-3 p-3 text-sf-text">
       <header class="flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div>
           <h1 class="text-lg font-semibold text-sf-text">{{ $t("resumeNavAiSettings") }}</h1>
@@ -14,7 +16,8 @@ import AiProviderSettingsContent from "../../editor/toolbar/modules/ai/content.v
           </p>
         </div>
       </header>
-      <AiProviderSettingsContent class="min-h-[540px]" />
+      <AiProviderSettingsContent class="shrink-0" />
     </main>
   </SfScrollbar>
+  </div>
 </template>
