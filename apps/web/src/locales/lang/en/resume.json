@@ -1,4 +1,8 @@
 {
+  "resumeMineTrashLoadFailed": "Could not load trash. Please try again.",
+  "resumeMineTrashRetry": "Reload",
+  "resumeMineTrashActionFailed": "Could not delete. Please try again.",
+  "resumeMineTrashClearing": "Deleting all…",
   "resumeMineEditTags": "Edit tags",
   "resumeMineTagsLabel": "Resume tags",
   "resumeMineTagsPlaceholder": "Type a tag and press Enter to add",

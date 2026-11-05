@@ -153,12 +153,22 @@ const getActionList = (item) => [
 // 回收站弹窗：首次打开时才加载回收站正文，避免一进页面就读取已删除简历
 const trashVisible = ref(false);
 const trashReady = ref(false);
+const trashLoading = ref(false);
+const trashLoadError = ref(false);
+const trashAction = ref("");
 const trashCount = computed(() => resumeStore.list.filter((item) => item.deletedAt !== null).length);
 const openTrash = async () => {
   trashVisible.value = true;
-  if (trashReady.value) return;
-  await resumeStore.loadTrashResumes();
-  trashReady.value = true;
+  if (trashLoading.value) return;
+  // 每次打开明确标记读取状态，失败后允许重新加载。
+  trashLoading.value = true;
+  trashLoadError.value = false;
+  try {
+    await resumeStore.loadTrashResumes();
+    trashReady.value = true;
+  } catch {
+    trashLoadError.value = true;
+  } finally { trashLoading.value = false; }
 };
 // 页头按钮恢复原有胶囊外观与主题色悬停反馈。
 const entryButtonClass =
@@ -188,10 +198,24 @@ const handleDelete = (index) => {
 
 // 清空前二次确认，避免误删回收站内容。
 const handleClearTrash = () => {
-  if (!resumeStore.trashList.length) return;
-  proxy.$confirm($t("resumeMineClearTrashConfirm"), $t("resumeMineClearTrashConfirmTitle")).then(() => {
-    resumeStore.clearTrash();
+  if (!resumeStore.trashList.length || trashAction.value) return;
+  proxy.$confirm($t("resumeMineClearTrashConfirm"), $t("resumeMineClearTrashConfirmTitle")).then(async () => {
+    if (trashAction.value) return;
+    // 清空期间显示进度并阻止重复操作，结束后恢复按钮。
+    trashAction.value = "clear";
+    try { await resumeStore.clearTrash(); }
+    catch { ElNotification({ type: "error", message: $t("resumeMineTrashActionFailed") }); }
+    finally { trashAction.value = ""; }
   });
+};
+// 永久删除展示对应条目的进行中状态，避免无反馈的重复点击。
+const handlePermanentDelete = async (index) => {
+  if (trashAction.value) return;
+  trashAction.value = resumeStore.trashList[index]?.id || "";
+  if (!trashAction.value) return;
+  try { await resumeStore.permanentlyDeleteResume(index); }
+  catch { ElNotification({ type: "error", message: $t("resumeMineTrashActionFailed") }); }
+  finally { trashAction.value = ""; }
 };
 </script>
 
@@ -360,8 +384,18 @@ const handleClearTrash = () => {
     />
     <!-- 回收站弹窗：只列名称与状态，不渲染简历缩略图 -->
     <SfModal v-model="trashVisible" :title="$t('resumeMineTrash')" width="600px">
-      <div class="flex w-full flex-col gap-3">
-        <div v-if="trashReady && resumeStore.trashList.length > 0" class="flex flex-col gap-3">
+      <!-- 约束内容高度，列表独立滚动，底部清空操作始终可见。 -->
+      <div class="flex h-[min(480px,calc(90dvh-84px))] min-h-0 w-full flex-col gap-3">
+        <SfScrollbar flush always class="min-h-0 flex-1" :aria-busy="trashLoading || !!trashAction">
+        <div v-if="trashLoading" role="status" class="flex min-h-full flex-1 flex-col items-center justify-center gap-3 py-3 text-sf-text-2">
+          <SfIcon icon="line-md:loading-twotone-loop" size="6" class="animate-spin text-sf-theme" />
+          <span class="text-sm">{{ $t("resumeMineTrashLoading") }}</span>
+        </div>
+        <div v-else-if="trashLoadError" role="alert" class="flex min-h-full flex-1 flex-col items-center justify-center gap-3 py-3 text-sm text-sf-text-2">
+          <span>{{ $t("resumeMineTrashLoadFailed") }}</span>
+          <SfButton type="bg" @click="openTrash">{{ $t("resumeMineTrashRetry") }}</SfButton>
+        </div>
+        <div v-else-if="trashReady && resumeStore.trashList.length > 0" class="flex shrink-0 flex-col gap-3">
           <div
             v-for="(item, index) in resumeStore.trashList"
             :key="item.id"
@@ -391,6 +425,7 @@ const handleClearTrash = () => {
               <button
                 type="button"
                 class="flex cursor-pointer items-center gap-1 rounded-xl px-3 py-1 text-sm text-sf-text-2 transition-colors hover:bg-sf-bg hover:text-sf-text"
+                :disabled="!!trashAction"
                 @click="resumeStore.restoreResume(index)"
               >
                 <SfIcon icon="lucide:rotate-ccw" size="4" />
@@ -399,35 +434,29 @@ const handleClearTrash = () => {
               <button
                 type="button"
                 class="flex cursor-pointer items-center gap-1 rounded-xl px-3 py-1 text-sm text-sf-error transition-colors hover:bg-sf-error-2"
-                @click="resumeStore.permanentlyDeleteResume(index)"
+                :disabled="!!trashAction"
+                @click="handlePermanentDelete(index)"
               >
-                <SfIcon icon="lucide:trash-2" size="4" />
+                <SfIcon v-if="trashAction === item.id" icon="line-md:loading-twotone-loop" size="4" class="animate-spin" />
+                <SfIcon v-else icon="lucide:trash-2" size="4" />
                 {{ $t("resumeMinePermanentDelete") }}
               </button>
             </div>
           </div>
         </div>
-        <div
-          v-else-if="!trashReady"
-          class="flex flex-col items-center justify-center py-20 text-sf-text-2"
-        >
-          <SfIcon
-            icon="line-md:loading-twotone-loop"
-            size="8"
-            class="mb-4 animate-spin text-sf-theme"
-          />
-          <span class="text-base">{{ $t("resumeMineTrashLoading") }}</span>
-        </div>
-        <div v-else class="flex flex-col items-center justify-center py-20 text-sf-text-2">
-          <SfIcon icon="lucide:trash-2" size="12" class="mb-4 text-sf-text-3" />
+        <div v-else class="flex min-h-full flex-1 flex-col items-center justify-center gap-3 py-3 text-sf-text-2">
+          <SfIcon icon="lucide:trash-2" size="12" class="text-sf-text-3" />
           <span class="text-base">{{ $t("resumeMineTrashEmpty") }}</span>
         </div>
+        </SfScrollbar>
         <div
-          v-if="trashReady && resumeStore.trashList.length > 0"
-          class="flex justify-end border-t border-sf-b pt-3"
+          v-if="!trashLoading && !trashLoadError && trashReady && (resumeStore.trashList.length > 0 || trashAction === 'clear')"
+          class="flex shrink-0 justify-end border-t border-sf-b pt-3"
         >
-          <SfButton plain type="error" icon="lucide:trash-2" @click="handleClearTrash">
-            {{ $t("resumeMineClearAll") }}
+          <SfButton plain type="error" :disabled="!!trashAction" @click="handleClearTrash">
+            <SfIcon v-if="trashAction === 'clear'" icon="line-md:loading-twotone-loop" size="4" class="mr-3 animate-spin" />
+            <SfIcon v-else icon="lucide:trash-2" size="4" class="mr-3" />
+            {{ $t(trashAction === 'clear' ? "resumeMineTrashClearing" : "resumeMineClearAll") }}
           </SfButton>
         </div>
       </div>

@@ -1,4 +1,8 @@
 {
+  "resumeMineTrashLoadFailed": "回收站加载失败，请重试。",
+  "resumeMineTrashRetry": "重新加载",
+  "resumeMineTrashActionFailed": "删除失败，请重试。",
+  "resumeMineTrashClearing": "正在全部删除…",
   "resumeMineEditTags": "修改标签",
   "resumeMineTagsLabel": "简历标签",
   "resumeMineTagsPlaceholder": "输入标签后按回车添加",
