@@ -78,17 +78,18 @@ defineExpose({ start, reset, hasResult });
     </template>
     <template v-else>
       <SfScrollbar flush class="min-h-0 flex-1">
-        <form class="flex flex-col gap-3" @submit.prevent="generate">
-          <p class="rounded-xl bg-sf-bg p-3 text-xs leading-6 text-sf-text-2">{{ $t('resumeAiGenerateInputDescription') }}</p>
-          <label class="flex flex-col gap-3 text-sm font-medium">
+        <!-- 表单使用与模型接入一致的紧凑控件和主题底色。 -->
+        <form class="generate-fields grid gap-3 sm:grid-cols-2" @submit.prevent="generate">
+          <p class="rounded-xl bg-sf-theme-3 p-3 text-xs leading-6 text-sf-text-2 sm:col-span-2">{{ $t('resumeAiGenerateInputDescription') }}</p>
+          <label class="flex min-w-0 flex-col gap-[6px] text-xs font-medium">
             {{ $t('resumeAiGeneratePositionTitle') }}
             <SfInput v-model="generationInput.position" :placeholder="$t('resumeAiGeneratePositionPlaceholder')" />
           </label>
-          <label class="flex flex-col gap-3 text-sm font-medium">
+          <label class="flex min-w-0 flex-col gap-[6px] text-xs font-medium">
             {{ $t('resumeAiGenerateWorkYearsTitle') }}
             <SfSelect v-model="generationInput.workYears" :list="workYearOptions" :placeholder="$t('resumeAiGenerateWorkYearsPlaceholder')" />
           </label>
-          <label class="flex flex-col gap-3 text-sm font-medium">
+          <label class="flex min-w-0 flex-col gap-[6px] text-xs font-medium sm:col-span-2">
             {{ $t('resumeAiGenerateSupplementTitle') }}
             <SfInput v-model="generationInput.supplement" type="textarea" :rows="7" resize="none" :placeholder="$t('resumeAiGenerateSupplementPlaceholder')" />
           </label>
@@ -100,3 +101,23 @@ defineExpose({ start, reset, hasResult });
     </template>
   </div>
 </template>
+
+<style scoped>
+@reference "@/styles/tailwind.css";
+
+/* 输入控件沿用模型接入区的边框与主题底色。 */
+.generate-fields :deep(.el-input__wrapper),
+.generate-fields :deep(.el-select__wrapper),
+.generate-fields :deep(.el-textarea__inner) {
+  @apply rounded-xl border border-sf-b bg-sf-bg text-sf-text shadow-none;
+}
+.generate-fields :deep(.el-input__wrapper),
+.generate-fields :deep(.el-select__wrapper) {
+  @apply min-h-9;
+}
+.generate-fields :deep(.el-input__wrapper:hover),
+.generate-fields :deep(.el-select__wrapper:hover),
+.generate-fields :deep(.el-textarea__inner:hover) {
+  @apply border-sf-theme;
+}
+</style>

@@ -51,8 +51,8 @@ function resetScore() {
 
 <template>
   <SfScrollbar class="h-full bg-sf-page" flush>
-    <!-- 填写页统一内容宽度、分组样式和选中反馈，结果优先展示关键指标。 -->
-    <main class="mx-auto w-full max-w-6xl p-3 text-sf-text">
+    <!-- 工作区内容撑满可用宽度，保留紧凑分组和选中反馈。 -->
+    <main class="w-full p-3 text-sf-text">
       <nav aria-label="面包屑" class="text-xs text-sf-text-3">
         <RouterLink to="/resume/tools" class="transition-colors hover:text-sf-theme">
           求职工具
@@ -74,7 +74,7 @@ function resetScore() {
             class="rounded-xl border border-sf-b bg-sf-primary p-3"
             aria-label="评分项目进度"
           >
-            <p class="text-sm font-semibold text-sf-text-2">
+            <p class="text-xs font-medium text-sf-text-2">
               第 {{ activeItemIndex + 1 }} / {{ resignationScoreList.length }} 项 · 已完成
               {{ completedCount }} 项
             </p>

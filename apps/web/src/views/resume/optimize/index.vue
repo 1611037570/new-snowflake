@@ -62,7 +62,8 @@ const close = () => { activeId.value = ""; };
       <section class="min-h-0 min-w-0 overflow-hidden rounded-xl border border-sf-b bg-sf-primary"><ResumePreview v-if="selectedResume" :key="selectedId" :item="selectedResume" /></section>
       <section class="flex min-h-0 min-w-0 flex-col gap-3 rounded-xl border border-sf-b bg-sf-primary p-3">
         <SfScrollbar flush class="min-h-0 flex-1">
-          <label class="flex flex-col gap-3 text-sm">选择简历<SfSelect v-model="selectedId" :list="options" placeholder="请选择简历" aria-label="选择需要优化的简历" /></label>
+          <!-- 简历选择沿用模型接入的紧凑表单样式。 -->
+          <label class="optimize-select flex flex-col gap-[6px] text-xs font-medium">选择简历<SfSelect v-model="selectedId" :list="options" placeholder="请选择简历" aria-label="选择需要优化的简历" /></label>
           <p v-if="blockReason" class="mt-3 rounded-xl bg-sf-warning-2 p-3 text-xs leading-6 text-sf-warning" role="status">{{ blockReason }}</p>
           <router-link v-if="blockReason" :to="{ path: '/resume/editor', query: { id: selectedId } }" class="mt-3 inline-block text-xs text-sf-theme hover:underline">去填写简历</router-link>
         </SfScrollbar>
@@ -71,3 +72,15 @@ const close = () => { activeId.value = ""; };
     </section>
   </main>
 </template>
+
+<style scoped>
+@reference "@/styles/tailwind.css";
+
+/* 选择控件使用与其他助手页面一致的主题底色。 */
+.optimize-select :deep(.el-select__wrapper) {
+  @apply min-h-9 rounded-xl border border-sf-b bg-sf-bg text-sf-text shadow-none;
+}
+.optimize-select :deep(.el-select__wrapper:hover) {
+  @apply border-sf-theme;
+}
+</style>

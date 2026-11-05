@@ -103,9 +103,9 @@ const exportSession = () => {
 <template>
   <main class="interview-fields flex h-full min-h-0 min-w-0 flex-col gap-3 bg-sf-page p-3 text-sf-text">
     <header v-if="!current" class="flex shrink-0 flex-wrap items-center justify-between gap-3">
-      <div class="flex min-w-0 items-center gap-3">
-        <span class="flex shrink-0 items-center justify-center rounded-xl border border-sf-b bg-sf-primary text-sf-theme" :class="current ? 'h-9 w-9' : 'h-12 w-12'"><SfIcon icon="ph:microphone-duotone" :size="current ? '5' : '6'" /></span>
-        <div><h1 class="font-semibold text-sf-text" :class="current ? 'text-sm' : 'text-lg'">{{ $t('resumeNavInterview') }}</h1><p v-if="!current" class="mt-3 text-xs leading-6 text-sf-text-2">选择训练方式，或先准备自我介绍与面试题。</p></div>
+      <!-- 页头与其他助手页面使用一致的紧凑标题。 -->
+      <div class="min-w-0">
+        <h1 class="text-lg font-semibold text-sf-text">{{ $t('resumeNavInterview') }}</h1><p class="mt-[6px] text-xs leading-6 text-sf-text-2">选择训练方式，或先准备自我介绍与面试题。</p>
       </div>
       <nav class="flex flex-wrap items-center gap-3">
         <InterviewButton type="bg" :disabled="initializing || !store.ready" @click="historyVisible = true"><SfIcon icon="tabler:history" size="4" />训练记录 {{ sessions.length }}</InterviewButton>
@@ -170,7 +170,7 @@ const exportSession = () => {
 
   :deep(.el-input__wrapper),
   :deep(.el-select__wrapper) {
-    @apply min-h-12 p-3;
+    @apply min-h-9 px-3 py-0;
   }
 
   /* 内框填满随表单行拉伸的下拉外壳，避免底部露出重复底色。 */

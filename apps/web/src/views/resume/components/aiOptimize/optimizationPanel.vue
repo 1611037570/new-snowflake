@@ -170,11 +170,12 @@ defineExpose({ canClose });
       <div class="flex min-h-0 min-w-0 flex-col gap-3">
       <!-- 表单沿用外壳留白，滚动时底部操作保持固定。 -->
       <SfScrollbar flush class="min-h-0 flex-1">
-        <form class="flex shrink-0 flex-col gap-3" @submit.prevent="start()">
-          <header class="rounded-2xl bg-sf-bg p-3"><p class="flex items-center gap-3 text-xs text-sf-text-3"><SfIcon icon="lucide:file-text" size="4" />本次优化的简历</p><h2 class="mt-3 text-sm font-semibold">{{ resumeTitle }}</h2><p class="mt-3 text-xs leading-6 text-sf-text-2">一次生成优化草稿和报告，先看完整效果，再决定是否保存。</p></header>
-          <label class="flex flex-col gap-3 text-sm font-medium">目标岗位<SfInput v-model="input.position" :readonly="!!copyTitle" placeholder="例如：后端开发工程师" maxlength="100" aria-label="目标岗位" /></label>
+        <!-- 优化表单沿用模型接入区的紧凑输入样式。 -->
+        <form class="optimization-fields flex shrink-0 flex-col gap-3" @submit.prevent="start()">
+          <header class="rounded-xl bg-sf-theme-3 p-3"><p class="flex items-center gap-3 text-xs text-sf-text-2"><SfIcon icon="lucide:file-text" size="4" class="text-sf-theme" />本次优化的简历</p><h2 class="mt-3 text-sm font-semibold">{{ resumeTitle }}</h2><p class="mt-3 text-xs leading-6 text-sf-text-2">一次生成优化草稿和报告，先看完整效果，再决定是否保存。</p></header>
+          <label class="flex flex-col gap-[6px] text-xs font-medium">目标岗位<SfInput v-model="input.position" :readonly="!!copyTitle" placeholder="例如：后端开发工程师" maxlength="100" aria-label="目标岗位" /></label>
           <fieldset v-if="!copyTitle"><legend class="mb-3 text-sm font-medium">优化重点</legend><div class="grid grid-cols-3 gap-3"><button v-for="focus in focuses" :key="focus" type="button" class="cursor-pointer rounded-xl border px-3 py-3 text-xs transition-colors" :class="input.focus === focus ? 'border-sf-theme bg-sf-theme-3 text-sf-theme' : 'border-sf-b text-sf-text-2 hover:bg-sf-bg'" :aria-pressed="input.focus === focus" @click="input.focus = focus">{{ focus }}</button></div></fieldset>
-          <label class="flex flex-col gap-3 text-sm font-medium">岗位说明 <span v-if="!copyTitle" class="text-xs font-normal text-sf-text-3">综合优化与精简表达可留空</span><SfInput v-model="input.jd" :readonly="!!copyTitle" type="textarea" :rows="5" maxlength="15000" placeholder="粘贴 JD，帮助 AI 判断岗位要求与已有经历的匹配程度" aria-label="岗位说明" /></label>
+          <label class="flex flex-col gap-[6px] text-xs font-medium">岗位说明 <span v-if="!copyTitle" class="text-xs font-normal text-sf-text-3">综合优化与精简表达可留空</span><SfInput v-model="input.jd" :readonly="!!copyTitle" type="textarea" :rows="5" maxlength="15000" placeholder="粘贴 JD，帮助 AI 判断岗位要求与已有经历的匹配程度" aria-label="岗位说明" /></label>
           <p class="flex items-start gap-3 text-xs leading-6 text-sf-text-3"><SfIcon icon="lucide:shield-check" size="5" class="shrink-0" />{{ copyTitle ? '仅调整已有事实的表达和重点，缺少的经历与技能列为待补充项。确认后另存岗位专属简历，保留原简历。' : '将读取整份简历并沿用当前脱敏设置。保留已确认事实，补写候选中的未知细节使用 XX 标记，保存前可在预览中核实。' }}</p>
           <p v-if="error" role="alert" class="text-sm leading-6 text-sf-error">{{ error }}</p>
           <p v-else-if="stage === '已停止优化'" role="status" class="text-xs text-sf-text-2">已停止优化，原简历未修改。</p>
@@ -185,3 +186,20 @@ defineExpose({ canClose });
     </section>
   </div>
 </template>
+
+<style scoped>
+@reference "@/styles/tailwind.css";
+
+/* 优化输入与其他助手表单共用主题边框和底色。 */
+.optimization-fields :deep(.el-input__wrapper),
+.optimization-fields :deep(.el-textarea__inner) {
+  @apply rounded-xl border border-sf-b bg-sf-bg text-sf-text shadow-none;
+}
+.optimization-fields :deep(.el-input__wrapper) {
+  @apply min-h-9;
+}
+.optimization-fields :deep(.el-input__wrapper:hover),
+.optimization-fields :deep(.el-textarea__inner:hover) {
+  @apply border-sf-theme;
+}
+</style>

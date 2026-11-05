@@ -116,12 +116,13 @@ onBeforeUnmount(() => { disposed = true; });
       <section class="min-h-0 min-w-0 overflow-hidden rounded-xl border border-sf-b bg-sf-primary"><ResumePreview v-if="selectedResume" :item="selectedResume" /></section>
       <section class="flex min-h-0 min-w-0 flex-col gap-3 rounded-xl border border-sf-b bg-sf-primary p-3">
         <SfScrollbar flush class="min-h-0 flex-1">
-          <form class="flex flex-col gap-3" @submit.prevent="openDraft">
-            <label class="flex flex-col gap-3 text-sm">选择简历<SfSelect v-model="selectedId" :list="options" :disabled="openingDraft" /></label>
-            <label class="flex flex-col gap-3 text-sm">岗位名称<SfInput v-model="input.position" :disabled="openingDraft" maxlength="100" placeholder="例如：前端开发工程师" /></label>
-            <label class="flex flex-col gap-3 text-sm">公司名称（选填）<SfInput v-model="input.company" :disabled="openingDraft" maxlength="100" placeholder="用于区分岗位专属版本" /></label>
-            <label class="flex flex-col gap-3 text-sm">岗位说明<SfInput v-model="input.jd" :disabled="openingDraft" type="textarea" :rows="10" maxlength="15000" placeholder="粘贴工作职责、任职要求和加分项" /></label>
-            <p class="text-xs leading-6 text-sf-text-3">沿用脱敏设置，仅调整已有事实。生成后查看草稿和对比，确认后另存。</p>
+          <!-- 岗位表单与模型接入保持相同的控件层次。 -->
+          <form class="job-match-fields flex flex-col gap-3" @submit.prevent="openDraft">
+            <label class="flex flex-col gap-[6px] text-xs font-medium">选择简历<SfSelect v-model="selectedId" :list="options" :disabled="openingDraft" /></label>
+            <label class="flex flex-col gap-[6px] text-xs font-medium">岗位名称<SfInput v-model="input.position" :disabled="openingDraft" maxlength="100" placeholder="例如：前端开发工程师" /></label>
+            <label class="flex flex-col gap-[6px] text-xs font-medium">公司名称（选填）<SfInput v-model="input.company" :disabled="openingDraft" maxlength="100" placeholder="用于区分岗位专属版本" /></label>
+            <label class="flex flex-col gap-[6px] text-xs font-medium">岗位说明<SfInput v-model="input.jd" :disabled="openingDraft" type="textarea" :rows="10" maxlength="15000" placeholder="粘贴工作职责、任职要求和加分项" /></label>
+            <p class="rounded-xl bg-sf-theme-3 p-3 text-xs leading-6 text-sf-text-2">沿用脱敏设置，仅调整已有事实。生成后查看草稿和对比，确认后另存。</p>
             <p v-if="blockReason" class="text-xs leading-6 text-sf-warning">{{ blockReason }}</p>
             <p v-if="error" role="alert" class="text-xs leading-6 text-sf-error">{{ error }}</p>
           </form>
@@ -131,3 +132,23 @@ onBeforeUnmount(() => { disposed = true; });
     </section>
   </main>
 </template>
+
+<style scoped>
+@reference "@/styles/tailwind.css";
+
+/* 表单输入与服务商配置使用一致的主题边框。 */
+.job-match-fields :deep(.el-input__wrapper),
+.job-match-fields :deep(.el-select__wrapper),
+.job-match-fields :deep(.el-textarea__inner) {
+  @apply rounded-xl border border-sf-b bg-sf-bg text-sf-text shadow-none;
+}
+.job-match-fields :deep(.el-input__wrapper),
+.job-match-fields :deep(.el-select__wrapper) {
+  @apply min-h-9;
+}
+.job-match-fields :deep(.el-input__wrapper:hover),
+.job-match-fields :deep(.el-select__wrapper:hover),
+.job-match-fields :deep(.el-textarea__inner:hover) {
+  @apply border-sf-theme;
+}
+</style>

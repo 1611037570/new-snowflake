@@ -176,10 +176,10 @@ if (props.initialConfig) chooseCategory(props.initialConfig.mode);
         <div class="grid gap-3 sm:grid-cols-2" :class="{ 'xl:grid-cols-3': group.name === '模拟面试' }">
           <!-- 悬停仅改变边框，保持卡片背景不变。 -->
           <button v-for="mode in group.modes" :key="mode.value" type="button"
-            class="flex h-full min-w-0 cursor-pointer flex-col gap-3 rounded-2xl border border-sf-b bg-sf-primary p-3 text-left transition-colors hover:border-sf-theme focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-sf-theme"
+            class="flex h-full min-w-0 cursor-pointer flex-col gap-3 rounded-xl border border-sf-b bg-sf-primary p-3 text-left transition-colors hover:border-sf-theme focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-sf-theme"
             @click="chooseCategory(mode.value)">
             <span class="flex items-center gap-3">
-              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sf-bg text-sf-theme"><SfIcon :icon="mode.icon" size="5" /></span>
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sf-theme-3 text-sf-theme"><SfIcon :icon="mode.icon" size="5" /></span>
               <span class="min-w-0 flex-1 font-semibold">{{ mode.label }}</span>
               <span class="shrink-0 text-xs text-sf-text-2">{{ isPreparationMode(mode.value) ? '生成内容' : '逐轮对话' }}</span>
             </span>
@@ -196,10 +196,10 @@ if (props.initialConfig) chooseCategory(props.initialConfig.mode);
 
     <template v-else-if="selectedMode">
       <!-- 卡片确定用途，开始页只确认资料，专项额外填写本次训练重点。 -->
-      <form class="flex flex-col gap-3 rounded-2xl border border-sf-b bg-sf-primary p-3" @submit.prevent="start">
+      <form class="flex flex-col gap-3 rounded-xl border border-sf-b bg-sf-primary p-3" @submit.prevent="start">
         <header class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex min-w-0 items-center gap-3">
-            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sf-bg text-sf-theme"><SfIcon :icon="selectedMode.icon" size="5" /></span>
+            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sf-theme-3 text-sf-theme"><SfIcon :icon="selectedMode.icon" size="5" /></span>
             <div><h2 class="font-semibold">{{ selectedMode.label }}</h2><p class="text-xs leading-6 text-sf-text-2">{{ selectedMode.detail }}</p></div>
           </div>
           <nav class="flex flex-wrap gap-3"><InterviewButton type="bg" @click="openModelSettings">面试设置</InterviewButton><InterviewButton type="bg" @click="category = null">更换类型</InterviewButton></nav>
