@@ -232,7 +232,9 @@ const parseJsonConfig = async (file) => {
           isObject(record) && (record.data === undefined || isObject(record.data)),
         )))) ||
       (item.ui !== undefined && !isObject(item.ui)) ||
-      (item.usage !== undefined && !isObject(item.usage))) {
+      (item.usage !== undefined && !isObject(item.usage)) ||
+      // 标签只接受文字列表，避免无效备份数据进入管理界面。
+      (item.usage?.tags !== undefined && (!Array.isArray(item.usage.tags) || !item.usage.tags.every((tag) => typeof tag === "string")))) {
       throw new Error($t("resumeImportInvalidBackup"));
     }
     // 以解析出的完整简历创建新简历，编辑器入口导入后跳到新简历。

@@ -51,6 +51,7 @@ export const DEFAULT_RESUME_ITEM = {
   },
   // 使用信息
   usage: {
+    tags: [] as string[], // 简历分类标签，不进入投递正文。
     // 标题模式：自动生成或自定义
     titleMode: "auto" as const,
     // 自定义标题内容

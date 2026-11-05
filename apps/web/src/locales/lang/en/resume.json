@@ -1,4 +1,10 @@
 {
+  "resumeMineEditTags": "Edit tags",
+  "resumeMineTagsLabel": "Resume tags",
+  "resumeMineTagsPlaceholder": "Type a tag and press Enter to add",
+  "resumeMineTagsHint": "Copies inherit tags. Job-tailored versions also receive a company and position tag.",
+  "resumeMineTagsUnavailable": "This resume is no longer available. Close and select again.",
+  "resumeMineTagsSaveFailed": "Could not save tags. Please try again.",
   "resumeGithubStarsLabel": "Star on GitHub",
   "resumeGithubStarsLoading": "Updating GitHub stars",
   "resumeGithubStarsUnavailable": "GitHub stars could not be updated; any displayed count is the last successful result",

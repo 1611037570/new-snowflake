@@ -1,3 +1,4 @@
+import { normalizeResumeTags } from "@/domain/resume/resumeTags";
 import confirm from "@/components/business/confirm";
 import { ElMessage } from "element-plus";
 import router from "@/routers";
@@ -270,6 +271,15 @@ export const useResumeStore = defineStore(
       return true;
     };
 
+    // 列表可修改非当前简历，按编号更新标签后显式排队保存。
+    const updateResumeTags = (id: string, tags: string[]) => {
+      const item = resumeList.value.find((record) => record.id === id);
+      if (!item) return false;
+      item.usage = { ...item.usage, tags: normalizeResumeTags(tags) };
+      schedulePersistResume(item);
+      return true;
+    };
+
     // 独立任务按编号一次写回；原内容变化或被删除时拒绝覆盖，非当前简历也正常保存。
     const replaceResumeData = (id: string, expectedData: string, data: Record<string, any>) => {
       const item = resumeList.value.find((record) => record.id === id);
@@ -318,6 +328,7 @@ export const useResumeStore = defineStore(
       saveStates, // 各简历实际保存阶段与失败说明
       savePendingResumes, // 可等待并向调用方报告失败的保存入口
       resumeList,
+      updateResumeTags, // 按编号修改并保存简历分类标签。
       renameResume, // 按编号重命名并保存简历
       replaceResumeData, // 根据任务开始时的内容校验后按编号写回业务数据。
       trashList,

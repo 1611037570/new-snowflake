@@ -1,3 +1,4 @@
+import { normalizeResumeTags } from "@/domain/resume/resumeTags";
 import { getUUID } from "@/utils";
 import { merge } from "lodash-es";
 import { compactResumeUi, resolveResumeUi } from "@/domain/resume/theme/resumeUi";
@@ -71,6 +72,8 @@ export const createResumeLifecycle = (options: ResumeLifecycleOptions) => {
       return false;
     }
     const resume = config ? mergeResumeItem(config) : createBlankResumeItem();
+    // 新建、复制和完整备份导入共用标签归一规则。
+    resume.usage.tags = normalizeResumeTags(resume.usage.tags);
     // 新建与导入只按当前主题展开，不从简历默认对象继承其他主题参数。
     resume.ui = resolveResumeUi(compactResumeUi(config?.ui));
     // 新建时间按本次创建计算，导入的备份时间仍保持原值

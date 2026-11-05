@@ -43,6 +43,7 @@ const draftInput = ref<{
   position: string; // 用户指定的目标岗位。
   jd: string; // 用户提供的岗位说明。
   title: string; // 专属版本标题。
+  tag: string; // 另存时绑定的公司与岗位标签。
 } | null>(null);
 const optimizationPanel = ref<InstanceType<typeof OptimizationPanel> | null>(null);
 let disposed = false;
@@ -82,6 +83,7 @@ const openDraft = async () => {
       resumeId: targetId, // 固定本次定制的源简历。
       position: targetInput.position.trim(), // 用户指定的目标岗位。
       jd: targetInput.jd.trim(), // 用户提供的原始岗位说明。
+      tag: [targetInput.company.trim(), targetInput.position.trim()].filter(Boolean).join(" · "), // 自动绑定本次投递目标。
       title: [targetInput.company.trim(), targetInput.position.trim(), "岗位专属简历"].filter(Boolean).join(" · "), // 用于另存版本的名称。
     };
   } catch (cause) { error.value = describeResumeAiError(cause); }
@@ -108,7 +110,7 @@ onBeforeUnmount(() => { disposed = true; });
     <div v-else-if="loadError" class="flex min-h-0 flex-1 flex-col items-center justify-center gap-3"><p class="text-sm text-sf-error">{{ loadError }}</p><SfButton type="bg" @click="initialize">重新读取</SfButton></div>
     <div v-else-if="!options.length" class="flex min-h-0 flex-1 flex-col items-center justify-center gap-3"><p class="text-sm">请先创建或导入一份简历。</p><router-link to="/resume/mine" class="text-sm text-sf-theme hover:underline">前往我的简历</router-link></div>
     <section v-else-if="draftInput" class="min-h-0 flex-1 overflow-hidden rounded-xl border border-sf-b bg-sf-primary p-3">
-      <OptimizationPanel ref="optimizationPanel" :resume-id="draftInput.resumeId" :initial-input="{ position: draftInput.position, jd: draftInput.jd, focus: '岗位匹配', jobAdaptation: true }" :copy-title="draftInput.title" @saved="notifySaved" @close="closeDraft" />
+      <OptimizationPanel ref="optimizationPanel" :resume-id="draftInput.resumeId" :initial-input="{ position: draftInput.position, jd: draftInput.jd, focus: '岗位匹配', jobAdaptation: true }" :copy-title="draftInput.title" :copy-tag="draftInput.tag" @saved="notifySaved" @close="closeDraft" />
     </section>
     <section v-else class="grid min-h-0 flex-1 grid-rows-2 gap-3 overflow-hidden lg:grid-cols-[minmax(0,1fr)_minmax(0,390px)] lg:grid-rows-1">
       <section class="min-h-0 min-w-0 overflow-hidden rounded-xl border border-sf-b bg-sf-primary"><ResumePreview v-if="selectedResume" :item="selectedResume" /></section>

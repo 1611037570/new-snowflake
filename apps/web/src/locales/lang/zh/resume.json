@@ -1,4 +1,10 @@
 {
+  "resumeMineEditTags": "修改标签",
+  "resumeMineTagsLabel": "简历标签",
+  "resumeMineTagsPlaceholder": "输入标签后按回车添加",
+  "resumeMineTagsHint": "复制时继承标签，岗位适配另存时自动追加公司与岗位标签。",
+  "resumeMineTagsUnavailable": "简历已不存在，请关闭后重新选择。",
+  "resumeMineTagsSaveFailed": "标签保存失败，请重试。",
   "resumeGithubStarsLabel": "支持开源",
   "resumeGithubStarsLoading": "正在更新 GitHub Star 数",
   "resumeGithubStarsUnavailable": "GitHub Star 数暂未更新，有数字时显示上次获取结果",

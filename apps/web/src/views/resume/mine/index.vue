@@ -1,4 +1,6 @@
 <script setup>
+import { normalizeResumeTags } from "@/domain/resume/resumeTags";
+import ResumeTagsModal from "../components/resumeTagsModal.vue";
 import { compactResumeItem } from "@/domain/resume/theme/resumeUi";
 import { useResumeStore } from "@/stores";
 import { trackResumeAction } from "@/hooks";
@@ -97,6 +99,20 @@ const openRename = (item) => {
   renameVisible.value = true;
 };
 
+// 标签编辑固定目标简历，右键与更多菜单复用同一入口。
+const tagsItem = ref(null);
+const tagsVisible = ref(false);
+const getResumeTags = (item) => normalizeResumeTags(item?.usage?.tags);
+const openTags = (item) => {
+  tagsItem.value = item;
+  tagsVisible.value = true;
+};
+const getTagActionList = (item) => [{
+  name: $t("resumeMineEditTags"), // 标签修改入口名称。
+  icon: "lucide:tag", // 已登记的标签图标。
+  fn: () => openTags(item), // 打开目标简历的标签弹窗。
+}];
+
 // 复制指定简历：复用 store 深拷贝逻辑创建独立新简历，并提示复制结果。
 const copyResume = (item) => {
   const copiedId = resumeStore.duplicateResume(item);
@@ -111,6 +127,7 @@ const copyResume = (item) => {
 
 // 草稿卡片操作菜单。
 const getActionList = (item) => [
+  ...getTagActionList(item),
   {
     name: $t("resumeMineRename"), // 草稿操作名称
     icon: "lucide:pencil-line", // 重命名入口图标
@@ -217,7 +234,9 @@ const handleClearTrash = () => {
             <!-- 新建简历入口项 -->
             <CreateResume v-if="card.type === 'create'" />
             <!-- 简历项 -->
-            <ResumeCardContainer v-else :item="card.item" @click="handleEdit(card.index)">
+            <!-- 卡片右键提供标签操作，移动端仍通过更多菜单进入。 -->
+            <SfMenu v-else :list="getTagActionList(card.item)">
+            <ResumeCardContainer :item="card.item" @click="handleEdit(card.index)">
               <template #actions>
                 <SfDropdown trigger="click" placement="bottom-end" :show-arrow="false">
                   <SfIcon
@@ -231,6 +250,16 @@ const handleClearTrash = () => {
                   </template>
                 </SfDropdown>
               </template>
+              <!-- 分类标签使用细边框增强辨识度，保留紧凑字号与当前位置。 -->
+              <div v-if="getResumeTags(card.item).length" class="mb-[6px] flex min-w-0 items-center gap-[6px] text-[11px] leading-[18px] text-sf-text-2">
+                <!-- 图标向下微调，补偿中文字形与行盒中心的视觉偏差。 -->
+                <SfIcon icon="lucide:tag" size="3" class="relative top-px shrink-0" />
+                <template v-for="(tag, tagIndex) in getResumeTags(card.item).slice(0, 3)" :key="tag">
+                  <span v-if="tagIndex" aria-hidden="true" class="shrink-0 text-sf-text-3">·</span>
+                  <span class="min-w-0 truncate rounded-full border border-sf-b px-[6px]">{{ tag }}</span>
+                </template>
+                <button v-if="getResumeTags(card.item).length > 3" type="button" class="shrink-0 cursor-pointer rounded-full border border-sf-b px-[6px] transition-colors hover:border-sf-theme hover:text-sf-theme" :aria-label="$t('resumeMineEditTags')" @click.stop="openTags(card.item)">+{{ getResumeTags(card.item).length - 3 }}</button>
+              </div>
               <!-- 标题行：左侧圆环展示必填项完成度，与编辑器进度环同一套画法 -->
               <div class="flex items-center gap-2">
                 <span
@@ -313,6 +342,7 @@ const handleClearTrash = () => {
                 </button>
               </div>
             </ResumeCardContainer>
+            </SfMenu>
           </template>
         </RevealGrid>
       </div>
@@ -402,6 +432,7 @@ const handleClearTrash = () => {
         </div>
       </div>
     </SfModal>
+    <ResumeTagsModal v-model="tagsVisible" :item="tagsItem" />
     <RenameResumeModal v-model="renameVisible" :item="renameItem" />
   </div>
 </template>

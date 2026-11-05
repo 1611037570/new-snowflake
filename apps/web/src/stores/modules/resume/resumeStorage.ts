@@ -1,3 +1,4 @@
+import { normalizeResumeTags } from "@/domain/resume/resumeTags";
 import { useIDBKeyval } from "@vueuse/integrations/useIDBKeyval";
 import { del, set } from "idb-keyval";
 import { debounce } from "lodash-es";
@@ -96,7 +97,9 @@ export const createResumeStorage = () => {
             throw new Error("简历存储数据格式无效");
           }
           const item = value as ResumeStorageItem;
-          return { ...item, ui: resolveResumeUi(item.ui) };
+          // 旧简历缺失标签时按空列表加载，其余使用信息原样保留。
+          const usage = item.usage as Record<string, unknown> | undefined;
+          return { ...item, usage: { ...usage, tags: normalizeResumeTags(usage?.tags) }, ui: resolveResumeUi(item.ui) };
         },
         // 压缩主题配置并解除嵌套代理，避免重复落库和存储失败
         write: (value: ResumeStorageItem | null) => value ? JSON.parse(JSON.stringify(compactResumeItem(value))) : value,

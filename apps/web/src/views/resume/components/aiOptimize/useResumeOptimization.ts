@@ -1,3 +1,4 @@
+import { normalizeResumeTags } from "@/domain/resume/resumeTags";
 import { computed, effectScope, onBeforeUnmount, ref } from "vue";
 import { useResumeStore } from "@/stores";
 import { createResumeEditor } from "@/stores/modules/resume/resumeEditor";
@@ -210,7 +211,7 @@ export const useResumeOptimization = () => {
   };
 
   // 岗位定制另存完整候选，沿用已有复制逻辑保留主题、媒体和模块配置。
-  const applyCopy = async (title: string): Promise<boolean> => {
+  const applyCopy = async (title: string, tag = ""): Promise<boolean> => {
     if (saving.value || !pendingItem.value || disposed) return false;
     if (accepted.value) return persist();
     // 生成期间可能新增了其他简历，另存前再次检查；保存重试不重复占名额。
@@ -219,7 +220,8 @@ export const useResumeOptimization = () => {
     error.value = "";
     try {
       const copy = JSON.parse(JSON.stringify(pendingItem.value));
-      copy.usage = { ...copy.usage, titleMode: "custom", customTitle: title.trim() };
+      // 定制版本继承原标签并追加本次岗位标签，相同内容只保存一次。
+      copy.usage = { ...copy.usage, titleMode: "custom", customTitle: title.trim(), tags: normalizeResumeTags([...normalizeResumeTags(copy.usage?.tags), tag]) };
       const id = store.duplicateResume(copy);
       if (!id) throw new Error("未能创建岗位专属简历，请检查简历数量上限后重试。");
       // 创建后立即标记，保存重试只做持久化，避免重复创建。

@@ -18,6 +18,7 @@ const props = defineProps<{
   resumeId: string; // 本次优化的固定简历编号，进入后不随页面切换。
   initialInput?: ResumeOptimizationInput; // 岗位适配传入已确认的岗位资料。
   copyTitle?: string; // 有值时另存岗位专属版本，原简历不覆盖。
+  copyTag?: string; // 岗位专属版本自动追加的公司与岗位标签。
 }>();
 // 关闭、放弃或保存完成后统一由外层收起面板。
 const emit = defineEmits<{
@@ -95,7 +96,7 @@ const start = (continueExisting = false) => {
 
 // 保存成功后直接结束面板，不再停留在已写入待保存的中间态。
 const saveResult = async () => {
-  if (await (props.copyTitle ? applyCopy(props.copyTitle) : apply())) {
+  if (await (props.copyTitle ? applyCopy(props.copyTitle, props.copyTag) : apply())) {
     emit("saved");
     emit("close");
   }

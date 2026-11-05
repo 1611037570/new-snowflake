@@ -1,4 +1,10 @@
 {
+  "learningCenter_tags_title": "管理简历标签",
+  "learningCenter_tags_summary": "通过标签区分不同岗位和使用场景的简历版本。",
+  "learningCenter_tags_step1": "进入“我的简历”，右键目标简历卡片，选择“修改标签”；也可以从卡片右上角的更多菜单打开。",
+  "learningCenter_tags_step2": "在输入框中填写标签后按回车添加；点击标签的删除按钮可以移除。",
+  "learningCenter_tags_step3": "点击“保存”，卡片信息区最上方会显示标签；超过三个时显示剩余数量，点击数量可以修改。",
+  "learningCenter_tags_tip": "普通复制继承原标签；岗位适配另存时自动追加“公司 · 岗位”标签，未填写公司时使用岗位名称。标签不会出现在投递文档中。",
   "learningCenterTitle": "学习中心",
   "learningCenterSubtitle": "查找功能，按步骤操作。",
   "learningCenterSearch": "搜索功能或操作",

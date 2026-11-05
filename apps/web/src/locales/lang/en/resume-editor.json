@@ -1,4 +1,10 @@
 {
+  "learningCenter_tags_title": "Manage resume tags",
+  "learningCenter_tags_summary": "Use tags to distinguish versions for different jobs and situations.",
+  "learningCenter_tags_step1": "In My Resumes, right-click a resume card and choose Edit tags, or use the more menu in the upper-right corner.",
+  "learningCenter_tags_step2": "Type a tag in the input and press Enter to add it. Remove a tag using its delete button.",
+  "learningCenter_tags_step3": "Select Save to show tags above the resume name. When there are more than three, select the remaining count to edit them.",
+  "learningCenter_tags_tip": "Copies inherit existing tags. Job-tailored copies also receive a company and position tag, or just the position when no company is entered. Tags do not appear in application documents.",
   "learningCenterTitle": "Learning Center",
   "learningCenterSubtitle": "Find a feature and follow the steps.",
   "learningCenterSearch": "Search features or actions",

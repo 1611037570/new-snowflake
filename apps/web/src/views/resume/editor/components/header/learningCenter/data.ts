@@ -51,6 +51,7 @@ export const LEARNING_CATEGORIES: LearningCategory[] = [
 export const LEARNING_ARTICLES: LearningArticle[] = [
   { id: "workspace", category: "start" },
   { id: "import", category: "start" },
+  { id: "tags", category: "start" }, // 简历分类标签的编辑与自动继承操作指引。
   { id: "modules", category: "edit" },
   { id: "fields", category: "edit" },
   { id: "records", category: "edit" },
