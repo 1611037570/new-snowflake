@@ -81,6 +81,11 @@ const navGroups = [
         path: "/resume/settings", // 导航目标路径
         icon: "lucide:sliders-horizontal", // 设置导航图标。
       },
+      {
+        key: "resumeNavLanded", // 歇会儿入口文案标识。
+        path: "/resume/landed", // 歇会儿页面路径。
+        icon: "mdi:trophy-outline", // 歇会儿导航图标。
+      },
     ],
   },
 ];

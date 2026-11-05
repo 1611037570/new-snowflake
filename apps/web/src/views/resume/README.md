@@ -27,6 +27,7 @@
 | `theme/` | 主题绘图与渲染接入，详见 [主题规范](theme/README.md) |
 | `editor/preview/resumePages/engine/` | 测量、分页与布局，详见 [引擎说明](editor/preview/resumePages/engine/README.md) |
 | `guide/` | 求职中心手册与决策工具 |
+| `landed/` | 歇会儿页面，以便签墙形式展示短句与语录 |
 | `packages/resume-agent/`（项目根目录） | 简历任务、技能、写入工具和完成校验，详见 [智能体说明](../../../../../packages/resume-agent/README.md) |
 | `packages/interview-agent/`（项目根目录） | 独立面试技能、只读工具与评价，详见 [面试智能体说明](../../../../../packages/interview-agent/README.md) |
 | `packages/resume-core/`（项目根目录） | 公共简历字段、格式、脱敏、媒体与快照，详见 [公共数据说明](../../../../../packages/resume-core/README.md) |

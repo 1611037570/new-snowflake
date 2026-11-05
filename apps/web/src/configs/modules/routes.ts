@@ -4,7 +4,6 @@
  */
 
 export const BASE_ROUTES = [
-  { name: "messageBoard" },
   { name: "icon" },
   { name: "color" },
   { name: "components" },

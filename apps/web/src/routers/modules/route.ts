@@ -69,6 +69,8 @@ const resumeChildren: RouteRecordRaw[] = [
     component: () => import("@/views/resume/settings/general/index.vue"),
     meta: { localeFiles: ["resume", "resume-editor"] },
   },
+  // 原留言板内容迁入工作区的便签墙页面。
+  { path: "landed", component: () => import("@/views/resume/landed/index.vue") },
   {
     path: "editor",
     name: "editor",
