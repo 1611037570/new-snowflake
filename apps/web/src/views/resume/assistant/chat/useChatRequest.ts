@@ -97,12 +97,12 @@ export const useChatRequest = ({
   // 工具调用过程区展示用的中文名
   // 工具动作面向用户描述，避免把内部工具名直接展示给用户
   const TOOL_NAMES: Record<string, string> = {
-    plan_resume_task: "理解需求",
+    plan_resume_task: "梳理本次任务目标与处理范围",
     request_resume_input: "确认补充信息",
     report_resume_blocker: "记录阻塞原因",
-    read_resume_data: "读取简历",
-    propose_resume_edits: "写入简历",
-    read_resume_guidance: "查阅写作知识",
+    read_resume_data: "读取本次任务需要的简历内容",
+    propose_resume_edits: "应用简历修改并记录结果",
+    read_resume_guidance: "查阅与本次任务相关的写作建议",
     update_resume_language: "同步简历语言",
   };
 
@@ -115,10 +115,15 @@ export const useChatRequest = ({
     const timers: ChatTimers = { thinking: null, reply: null };
     activeTimers = timers;
 
-    const onReasoning = () => {
+    // 接收真实思考增量，避免等整轮结束才显示内容。
+    const onReasoning = (delta = "") => {
       if (!isCurrent() || !lastMsg) return;
       lastMsg.requestStatus = "thinking";
-      lastMsg.stepLabel = "正在深度思考…";
+      lastMsg.stepLabel = delta ? "正在分析本次任务…" : "正在准备处理你的请求…";
+      if (delta) {
+        lastMsg.thought += delta;
+        scrollToBottom();
+      }
       if (!timers.thinking) {
         timers.thinking = setInterval(() => {
           if (isCurrent()) lastMsg.thoughtTime += 1;
@@ -255,6 +260,14 @@ export const useChatRequest = ({
       }
       // 请求开始即启动计时，避免首个模型事件返回前没有耗时
       state.onReasoning();
+      // 思考与执行记录共用过程区，分段展示且不伪造模型内容。
+      let reasoningStarted = false;
+      const appendProcess = (text: string) => {
+        if (!isCurrentRequest() || !lastMsg || !text.trim()) return;
+        lastMsg.thought += `${lastMsg.thought.trim() ? "\n\n" : ""}${text}`;
+        reasoningStarted = false;
+        scrollToBottom();
+      };
 
       // 首次请求时才加载能力与简历工具清单，跨轮承接由任务状态负责。
       const { tools: resolvedTools, capabilities: resolvedCapabilities, taskProfile } = await resolveTools(requestMessage?.requestContext, {
@@ -306,6 +319,7 @@ export const useChatRequest = ({
             replayed: evidence.replayed,
             at: Date.now(),
           });
+          appendProcess(`${evidence.summary}${evidence.replayed ? "（沿用本次任务中已取得的结果）" : ""}`);
           if (evidence.replayed) return;
           // 证据摘要本身是用户可读的结果，直接作为阶段提示
           lastMsg.stepLabel = evidence.summary;
@@ -319,6 +333,11 @@ export const useChatRequest = ({
           if (!isCurrentRequest() || !lastMsg?.agentRun) return;
           if (event.type === "planned") {
             lastMsg.agentRun.task = event.task;
+            appendProcess([
+              `**任务目标**：${event.task.objective}`,
+              event.task.scope ? `**处理范围**：${event.task.scope}` : "",
+              event.task.successCondition ? `**完成要求**：${event.task.successCondition}` : "",
+            ].filter(Boolean).join("\n\n"));
             return;
           }
           if (event.type === "implicit") {
@@ -327,6 +346,9 @@ export const useChatRequest = ({
             lastMsg.agentRun.note = `未建立任务契约，已按 ${event.tool} 的效果降级处理`;
             return;
           }
+          appendProcess(event.completed
+            ? "已核对本次任务的执行结果，正在整理回复。"
+            : `本次任务尚未满足完成要求${event.reason ? `：${event.reason}` : "，正在继续处理。"}`);
           lastMsg.agentRun.verdicts.push({
             completed: event.completed,
             reason: event.reason,
@@ -347,27 +369,22 @@ export const useChatRequest = ({
           thinking: {
             type: thinkMode.value ? "enabled" : "disabled",
           },
-          onReasoning: () => state?.onReasoning(),
+          onReasoning: (delta) => {
+            if (!isCurrentRequest() || !lastMsg || !delta) return;
+            if (!reasoningStarted) {
+              appendProcess("### 分析过程\n");
+              reasoningStarted = true;
+            }
+            state?.onReasoning(delta);
+          },
           onContent: (data) => state?.onContent(data),
           onToken: (totalTokens) => state?.onToken(totalTokens),
-          onThink: (reasoning) => {
-            if (!isCurrentRequest() || !lastMsg || !reasoning) return;
-            lastMsg.stepLabel = "正在深度思考…";
-            lastMsg.thought += `\n\n### 思考\n${reasoning}`;
-            scrollToBottom();
-          },
           onAct: (toolCall) => {
             if (!isCurrentRequest() || !lastMsg) return;
-            const displayName = TOOL_NAMES[toolCall.function.name] || toolCall.function.name;
+            const displayName = TOOL_NAMES[toolCall.function.name] || "处理本次任务所需的操作";
             // 工具开始只记录执行动作，不写入参数与数据
-            lastMsg.thought += `\n\n正在${displayName}…\n`;
+            appendProcess(`正在${displayName}…`);
             lastMsg.stepLabel = `正在${displayName}…`;
-            scrollToBottom();
-          },
-          onObserve: (_observation, round) => {
-            if (!isCurrentRequest() || !lastMsg) return;
-            // 阶段提示由结构化证据给出，观测只补轮次记录，避免覆盖写入结果
-            lastMsg.thought += `\n第 ${round} 轮观测完成`;
             scrollToBottom();
           },
         },
@@ -378,7 +395,7 @@ export const useChatRequest = ({
           lastMsg.resumeTask = task;
           lastMsg.requestStatus = "success";
           lastMsg.stepLabel = "";
-          lastMsg.thoughtCollapsed = true;
+          // 完成后保留过程区的展开状态，方便直接查看本次执行内容。
           scrollToBottom();
           setTimeout(() => {
             if (isCurrentRequest()) scrollToBottom();

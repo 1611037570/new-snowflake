@@ -5,7 +5,6 @@ import { ElMessage } from "element-plus";
 import { storeToRefs } from "pinia";
 import ToggleButton from "./toggleButton.vue";
 import ReportPanel from "./reportPanel.vue";
-import AgentRunPanel from "./agentRunPanel.vue";
 import ChangeList from "./changeList.vue";
 import { parseResumeReport, stripResumeReportBlock } from "@snowflake/resume-agent";
 import { onBeforeUnmount, ref, watch } from "vue";
@@ -35,12 +34,6 @@ const props = defineProps({
 });
 // 本轮是否已撤回：仅用于隐藏操作按钮，不写入消息数据
 const withdrawn = ref(false);
-// 运行详情展开状态：仅在当前会话内有效，不写入消息
-const showAgentRun = ref(false);
-// 有任务契约或工具证据时提供运行详情入口
-const hasAgentRun = computed(() =>
-  Boolean(props.msg.agentRun?.task || props.msg.agentRun?.steps?.length),
-);
 // 重试回调，由 index.vue 通过 provide 注入
 const retry = inject("retry");
 
@@ -123,8 +116,8 @@ const showContent = computed(
 );
 const hasThought = computed(() => !!props.msg.thought?.trim());
 const hasContent = computed(() => !!content.value?.trim());
-// 执行过程按钮文案：完成后标记“已完成”，运行中保持“执行过程”
-const processLabel = computed(() => (hasContent.value ? "已完成执行" : "执行过程"));
+// 执行过程统一承载思考、任务目标和实际操作结果。
+const processLabel = "执行过程";
 // 等待态文案：优先展示当前执行动作，其次回退到思考/生成计时
 const statusText = computed(() => {
   if (props.msg.stepLabel) return props.msg.stepLabel;
@@ -179,16 +172,8 @@ const animatedTokens = useTransition(
         <div v-if="msg.total_tokens" class="flex items-center gap-1">
           <span>{{ Math.round(animatedTokens) }} tokens</span>
         </div>
-      <span v-if="showTotalTime"> 耗时 {{ totalTime }} 秒 </span>
-      <button
-        v-if="hasAgentRun"
-        type="button"
-        class="cursor-pointer hover:text-sf-theme"
-        @click="showAgentRun = !showAgentRun"
-      >
-        {{ showAgentRun ? "收起详情" : "运行详情" }}
-      </button>
-    </div>
+        <span v-if="showTotalTime"> 耗时 {{ totalTime }} 秒 </span>
+      </div>
     </header>
     <!-- 加载状态 -->
     <div
@@ -274,8 +259,6 @@ const animatedTokens = useTransition(
         撤回修改
       </button>
     </nav>
-    <!-- 运行详情：任务契约、工具证据与完成校验，仅在有观测数据时展示 -->
-    <AgentRunPanel v-if="showAgentRun && msg.agentRun" :run="msg.agentRun" />
     <!-- 推荐问题 -->
     <div v-if="isLast && msg.followQuestions.length" class="mt-1 flex w-full flex-col gap-2">
       <div
