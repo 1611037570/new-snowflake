@@ -132,11 +132,11 @@ watch([() => route.path, isMobile], () => {
       url="/resume"
     />
     <!-- 按功能分组陈列，组标题用说明文字区分层次，条目保持紧凑居中。 -->
-    <nav class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3" :aria-label="$t('resumeNavTitle')">
+    <nav class="flex min-h-0 flex-1 flex-col overflow-y-auto p-3" :aria-label="$t('resumeNavTitle')">
       <div
         v-for="group in navGroups"
         :key="group.key || group.items[0].path"
-        class="flex flex-col gap-[3px]"
+        class="flex flex-col gap-[3px] [&+div]:pt-[3px]"
       >
         <p v-if="group.key" class="px-3 text-xs font-medium text-sf-text-3">{{ $t(group.key) }}</p>
         <router-link
@@ -191,11 +191,11 @@ watch([() => route.path, isMobile], () => {
     append-to-body
     destroy-on-close
   >
-    <nav class="flex flex-col gap-3 text-sf-text">
+    <nav class="flex flex-col text-sf-text">
       <div
         v-for="group in navGroups"
         :key="group.key || group.items[0].path"
-        class="flex flex-col gap-[6px]"
+        class="flex flex-col gap-[6px] [&+div]:pt-[6px]"
       >
         <p v-if="group.key" class="px-3 text-xs font-medium text-sf-text-3">{{ $t(group.key) }}</p>
         <router-link
