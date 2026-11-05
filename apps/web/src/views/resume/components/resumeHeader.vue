@@ -11,76 +11,86 @@ const drawerVisible = ref(false);
 // 窄屏使用抽屉，桌面固定显示紧凑侧栏。
 const isMobile = useMediaQuery("(max-width: 767px)");
 
-// 桌面侧栏与移动抽屉共用分组导航：简历入口、AI 能力、求职与设置。
+// 桌面侧栏与移动抽屉共用分组：简历制作、AI 助手、设置与记录、求职工具、更多。
 const navGroups = [
   {
-    key: "", // 首组不展示分组标题，直接陈列简历入口。
-    items: [
+    key: "resumeNavGroupResume", // 简历制作分组标题文案标识。
+    items: [ // 简历制作功能入口。
       {
-        key: "resumeNavTemplates", // 导航文案标识
-        path: "/resume/template", // 导航目标路径
+        key: "resumeNavTemplates", // 简历模板入口文案标识。
+        path: "/resume/template", // 简历模板页面路径。
         icon: "lucide:layout-template", // 模板导航图标。
       },
       {
-        key: "resumeNavMyResumes", // 导航文案标识
-        path: "/resume/mine", // 导航目标路径
+        key: "resumeNavMyResumes", // 我的简历入口文案标识。
+        path: "/resume/mine", // 我的简历页面路径。
         icon: "mdi:file-document-outline", // 我的简历导航图标。
       },
     ],
   },
   {
-    key: "resumeNavGroupAi", // 分组标题文案标识
-    items: [
+    key: "resumeNavGroupAi", // AI 助手分组标题文案标识。
+    items: [ // AI 助手功能入口。
       {
-        key: "resumeNavAiGenerate", // AI 生成入口文案标识。
-        path: "/resume/generate", // 独立生成页面，与新建入口共用同一套流程。
-        icon: "lucide:wand-sparkles", // AI 生成导航图标。
+        key: "resumeNavAiGenerate", // 简历生成入口文案标识。
+        path: "/resume/generate", // 独立简历生成页面路径。
+        icon: "lucide:wand-sparkles", // 简历生成导航图标。
       },
       {
-        key: "resumeNavAiOptimize", // 独立优化入口文案。
-        path: "/resume/optimize", // 选择简历后打开共用优化弹窗。
-        icon: "lucide:scan-text", // 简历优化图标。
+        key: "resumeNavAiOptimize", // 简历优化入口文案标识。
+        path: "/resume/optimize", // 独立简历优化页面路径。
+        icon: "lucide:scan-text", // 简历优化导航图标。
       },
       {
-        key: "resumeNavInterview", // 面试栏目文案标识。
-        path: "/resume/interview", // 独立面试训练页面。
-        icon: "ph:microphone-duotone", // 面试训练图标。
-      },
-      {
-        key: "resumeNavAiUsage", // 用户个人使用情况入口文案。
-        path: "/resume/ai-usage", // 个人完成次数与近期记录页面。
-        icon: "tabler:history", // 使用记录图标。
-      },
-      {
-        key: "resumeNavAiSettings", // AI 设置入口文案，指向模型绑定与添加页面。
-        path: "/resume/ai", // 导航目标路径
-        icon: "lucide:sparkles", // 人工智能导航图标。
+        key: "resumeNavInterview", // 面试训练入口文案标识。
+        path: "/resume/interview", // 独立面试训练页面路径。
+        icon: "ph:microphone-duotone", // 面试训练导航图标。
       },
     ],
   },
   {
-    key: "resumeNavGroupJob", // 分组标题文案标识
-    items: [
+    key: "resumeNavGroupSettings", // 设置与记录分组标题文案标识。
+    items: [ // 设置与记录功能入口。
       {
-        key: "resumeNavStatistics", // 导航文案标识
-        path: "/resume/statistics", // 导航目标路径
-        icon: "fa-solid:chart-line", // 统计导航图标。
+        key: "resumeNavAiUsage", // 使用情况入口文案标识。
+        path: "/resume/ai-usage", // 个人使用情况页面路径。
+        icon: "tabler:history", // 使用记录导航图标。
       },
       {
-        key: "resumeNavGuide", // 导航文案标识
-        path: "/resume/guide", // 导航目标路径
+        key: "resumeNavAiSettings", // 模型设置入口文案标识。
+        path: "/resume/ai", // 模型绑定与添加页面路径。
+        icon: "lucide:sparkles", // 模型设置导航图标。
+      },
+      {
+        key: "resumeNavSettings", // 通用设置入口文案标识。
+        path: "/resume/settings", // 通用设置页面路径。
+        icon: "lucide:sliders-horizontal", // 通用设置导航图标。
+      },
+    ],
+  },
+  {
+    key: "resumeNavGroupResources", // 求职工具分组标题文案标识。
+    items: [ // 求职工具功能入口。
+      {
+        key: "resumeNavStatistics", // 求职统计入口文案标识。
+        path: "/resume/statistics", // 求职统计页面路径。
+        icon: "fa-solid:chart-line", // 求职统计导航图标。
+      },
+      {
+        key: "resumeNavGuide", // 求职指南入口文案标识。
+        path: "/resume/guide", // 求职指南页面路径。
         icon: "mdi:book-open-page-variant", // 求职指南导航图标。
       },
       {
-        key: "resumeNavTools", // 导航文案标识
-        path: "/resume/tools", // 导航目标路径
+        key: "resumeNavTools", // 求职工具入口文案标识。
+        path: "/resume/tools", // 求职工具页面路径。
         icon: "mdi:hammer-wrench", // 求职工具导航图标。
       },
-      {
-        key: "resumeNavSettings", // 导航文案标识
-        path: "/resume/settings", // 导航目标路径
-        icon: "lucide:sliders-horizontal", // 设置导航图标。
-      },
+    ],
+  },
+  {
+    key: "resumeNavGroupMore", // 更多分组标题文案标识。
+    items: [ // 更多功能入口。
       {
         key: "resumeNavLanded", // 歇会儿入口文案标识。
         path: "/resume/landed", // 歇会儿页面路径。
