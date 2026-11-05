@@ -34,9 +34,9 @@ const boxSize = computed(() => {
     class="group relative box-content flex cursor-pointer flex-col overflow-hidden rounded-[4px] border border-sf-b bg-sf-primary transition-all duration-200 hover:scale-102 hover:border-sf-theme"
     @click="emit('click')"
   >
-    <!-- 卡片右上角操作入口由调用方按需注入。 -->
+    <!-- 移动端始终显示操作入口，桌面端悬停时显示。 -->
     <div
-      class="invisible absolute top-3 right-3 z-20 opacity-0 transition-opacity duration-200 group-hover:visible group-hover:opacity-100"
+      class="absolute top-3 right-3 z-20 md:invisible md:opacity-0 md:transition-opacity md:duration-200 md:group-hover:visible md:group-hover:opacity-100"
       @click.stop
     >
       <slot name="actions" />

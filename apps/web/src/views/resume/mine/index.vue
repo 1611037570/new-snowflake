@@ -274,13 +274,13 @@ const handlePermanentDelete = async (index) => {
                   </template>
                 </SfDropdown>
               </template>
-              <!-- 分类标签使用细边框增强辨识度，保留紧凑字号与当前位置。 -->
+              <!-- 标签保留原有位置，使用主题底色区分辅助信息。 -->
               <div v-if="getResumeTags(card.item).length" class="mb-[6px] flex min-w-0 items-center gap-[6px] text-[11px] leading-[18px] text-sf-text-2">
                 <!-- 图标向下微调，补偿中文字形与行盒中心的视觉偏差。 -->
                 <SfIcon icon="lucide:tag" size="3" class="relative top-px shrink-0" />
                 <template v-for="(tag, tagIndex) in getResumeTags(card.item).slice(0, 3)" :key="tag">
                   <span v-if="tagIndex" aria-hidden="true" class="shrink-0 text-sf-text-3">·</span>
-                  <span class="min-w-0 truncate rounded-full border border-sf-b px-[6px]">{{ tag }}</span>
+                  <span class="min-w-0 truncate rounded-full border border-sf-b bg-sf-bg px-[6px]">{{ tag }}</span>
                 </template>
                 <button v-if="getResumeTags(card.item).length > 3" type="button" class="shrink-0 cursor-pointer rounded-full border border-sf-b px-[6px] transition-colors hover:border-sf-theme hover:text-sf-theme" :aria-label="$t('resumeMineEditTags')" @click.stop="openTags(card.item)">+{{ getResumeTags(card.item).length - 3 }}</button>
               </div>
@@ -321,7 +321,7 @@ const handlePermanentDelete = async (index) => {
                     {{ card.progress }}
                   </span>
                 </span>
-                <div class="min-w-0 truncate text-sm font-black text-sf-text">
+                <div class="min-w-0 truncate text-sm font-semibold text-sf-text">
                   {{ getResumeTitle(card.item) }}
                 </div>
               </div>
@@ -342,7 +342,7 @@ const handlePermanentDelete = async (index) => {
               <div class="-mx-2 -mb-2 mt-2 flex border-t border-sf-b">
                 <button
                   type="button"
-                  class="flex flex-1 cursor-pointer items-center justify-center gap-2 py-2 text-sm text-sf-text-2 transition-colors hover:bg-sf-bg hover:text-sf-text"
+                  class="flex flex-1 cursor-pointer items-center justify-center gap-2 py-2 text-xs font-medium text-sf-text-2 transition-colors hover:bg-sf-bg hover:text-sf-theme"
                   @click.stop="handleEdit(card.index)"
                 >
                   <SfIcon icon="lucide:pencil" size="4" />
@@ -350,7 +350,7 @@ const handlePermanentDelete = async (index) => {
                 </button>
                 <button
                   type="button"
-                  class="flex flex-1 cursor-pointer items-center justify-center gap-2 border-l border-sf-b py-2 text-sm text-sf-text-2 transition-colors hover:bg-sf-bg hover:text-sf-text"
+                  class="flex flex-1 cursor-pointer items-center justify-center gap-2 border-l border-sf-b py-2 text-xs font-medium text-sf-text-2 transition-colors hover:bg-sf-bg hover:text-sf-theme"
                   @click.stop="copyResume(card.item)"
                 >
                   <SfIcon icon="lucide:copy" size="4" />
@@ -358,7 +358,7 @@ const handlePermanentDelete = async (index) => {
                 </button>
                 <button
                   type="button"
-                  class="flex flex-1 cursor-pointer items-center justify-center gap-2 border-l border-sf-b py-2 text-sm text-sf-error transition-colors hover:bg-sf-error-2"
+                  class="flex flex-1 cursor-pointer items-center justify-center gap-2 border-l border-sf-b py-2 text-xs font-medium text-sf-text-2 transition-colors hover:bg-sf-error-2 hover:text-sf-error"
                   @click.stop="handleDelete(card.index)"
                 >
                   <SfIcon icon="lucide:trash-2" size="4" />
