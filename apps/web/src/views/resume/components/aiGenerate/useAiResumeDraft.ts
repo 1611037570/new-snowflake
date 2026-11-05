@@ -1,7 +1,8 @@
-import { useAiStore, useResumeStore } from "@/stores";
+import { useAiStore } from "@/stores";
 import { $t } from "@/locales";
 import { resolveResumeUi } from "@/domain/resume/theme/resumeUi";
 import { useResumeAiAvailability } from "@/views/resume/hooks/useResumeAiAvailability";
+import { useResumeCapacity } from "@/views/resume/hooks/useResumeCapacity";
 import { normalizeResumeData } from "@/views/resume/mine/resumeImportNormalizer";
 import { initializeDefaultAddedFields } from "@/stores/modules/resume/hooks/useConfigTemplate";
 import {
@@ -26,7 +27,7 @@ export type AiGenerateInput = {
 export const useAiResumeGuard = () => {
   const router = useRouter();
   const aiStore = useAiStore();
-  const resumeStore = useResumeStore();
+  const { ensureCapacity } = useResumeCapacity();
   const { ensureAiAvailable } = useResumeAiAvailability();
 
   // 列表页与独立页面没有编辑器内模型弹窗，缺少模型时前往统一配置页。
@@ -37,10 +38,7 @@ export const useAiResumeGuard = () => {
 
   // 数量或模型未就绪时不进入生成，并给出对应的处理入口。
   const ensureReady = () => {
-    if (resumeStore.resumeList.length >= resumeStore.maxCount) {
-      ElMessage.warning($t("resumeCreateMaxLimit", { max: resumeStore.maxCount }));
-      return false;
-    }
+    if (!ensureCapacity()) return false;
     return ensureAiAvailable(configureModel);
   };
 

@@ -20,9 +20,19 @@ export const createReactRunner = (model: LLM, config: ReactConfig) => {
     };
 
     const run = async (initialMessages: ChatMessage[]): Promise<string> => {
-      const maxSteps = config.maxSteps ?? 6;
-      // 完成校验打回上限：单独计量，不与工具轮次共用预算
-      const finalRetryLimit = config.finalRetryLimit ?? 3;
+      const maxSteps = config.maxSteps ?? 99;
+      // 每次报告修正仍占模型请求轮次，累计修正和相同失败分别计数。
+      const finalRetryLimit = config.finalRetryLimit ?? 99;
+      const repeatedFailureLimit = config.repeatedFailureLimit ?? 3;
+      // 按工具分别记录失败，穿插读取不能清除另一个工具的重复失败。
+      const failures = new Map<string, { reason: string /* 相同问题的规范化原因。 */; count: number /* 连续失败次数。 */ }>();
+      const recordFailure = (key: string, reason: string) => {
+        const normalized = reason.trim().replace(/\s+/g, " ");
+        const previous = failures.get(key);
+        const count = previous?.reason === normalized ? previous.count + 1 : 1;
+        failures.set(key, { reason: normalized, count });
+        return count >= repeatedFailureLimit;
+      };
       let history: ChatMessage[] = [...initialMessages];
       const traceId = model.observer.createLlmTrace({
         provider: model.provider,
@@ -45,6 +55,15 @@ export const createReactRunner = (model: LLM, config: ReactConfig) => {
           status,
         });
         activeRound = null;
+      };
+      // 退出不再请求模型，交给业务层保留已完成结果并说明停止原因。
+      const finishIncomplete = async (reason: string) => {
+        if (!config.onIncomplete) throw new Error(reason);
+        const answer = await config.onIncomplete(reason);
+        config.onFinal?.(answer);
+        finishActiveRound("error");
+        model.observer.finishLlmTrace(traceId, "error", reason);
+        return answer;
       };
 
       try {
@@ -99,15 +118,13 @@ export const createReactRunner = (model: LLM, config: ReactConfig) => {
               const retryReason = await config.beforeFinal(finalAnswer);
               if (retryReason) {
                 lastIncompleteReason = retryReason;
-                // 收口重试单独计数，避免格式问题反复打回把工具轮次耗光
+                // 不同问题允许继续修正，相同问题达到上限立即退出。
                 finalRetries += 1;
+                if (recordFailure("final", retryReason)) {
+                  return await finishIncomplete(`同一问题已连续失败 ${repeatedFailureLimit} 次，已停止自动重试：${retryReason}`);
+                }
                 if (step >= maxSteps - 1 || finalRetries > finalRetryLimit) {
-                  if (!config.onIncomplete) throw new Error("ReAct 未满足任务完成条件");
-                  const incompleteAnswer = await config.onIncomplete(retryReason);
-                  config.onFinal?.(incompleteAnswer);
-                  finishActiveRound();
-                  model.observer.finishLlmTrace(traceId, "success");
-                  return incompleteAnswer;
+                  return await finishIncomplete(retryReason);
                 }
                 history.push({ role: "assistant", content: result.finalAnswer });
                 history.push({ role: "system", content: retryReason });
@@ -171,20 +188,24 @@ export const createReactRunner = (model: LLM, config: ReactConfig) => {
               content: observation.content,
               tool_call_id: observation.toolCallId,
             });
+            // 只识别明确的失败信封，不把普通数据中的空值视为失败。
+            const value = raw && typeof raw === "object" ? raw as Record<string, unknown> : null;
+            const failure = config.getToolFailure?.(toolCall, raw) || (value && (
+              value.accepted === false || value.success === false || value.applied === false ||
+              value.status === "failed" || typeof value.error === "string"
+            ) ? String(value.error || value.message || value.summary || "工具未能完成操作") : "");
+            const failureKey = `tool:${toolCall.function.name}`;
+            if (failure) {
+              if (recordFailure(failureKey, failure)) {
+                return await finishIncomplete(`同一问题已连续失败 ${repeatedFailureLimit} 次，已停止自动重试：${toolCall.function.name}，${failure}`);
+              }
+            } else failures.delete(failureKey);
           }
           finishActiveRound();
         }
 
         console.warn("[ReAct] 超出最大步数");
-        if (config.onIncomplete) {
-          const incompleteAnswer = await config.onIncomplete(
-            lastIncompleteReason || "执行轮次已用完，尚未生成通过校验的最终回答。",
-          );
-          config.onFinal?.(incompleteAnswer);
-          model.observer.finishLlmTrace(traceId, "success");
-          return incompleteAnswer;
-        }
-        throw new Error("ReAct 超出最大步数");
+        return await finishIncomplete(lastIncompleteReason || "执行轮次已用完，尚未生成通过校验的最终回答。");
       } catch (error) {
         const message = String((error as any)?.message || "ReAct 执行失败");
         const status = error instanceof AbortError ? "aborted" : "error";

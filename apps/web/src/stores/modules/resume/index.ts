@@ -47,6 +47,8 @@ export const useResumeStore = defineStore(
     const resumeLoadPromises = new Map<string, Promise<any>>();
     // 简历最大数量
     const maxCount = 10;
+    // 剩余名额按完整目录计算，尚未加载的正文同样占用容量，回收站不占用。
+    const remainingSlots = computed(() => Math.max(0, maxCount - list.value.filter((item) => item.deletedAt === null).length));
     // 回收站最大数量
     const maxTrashCount = 10;
     // 回收站保留天数：超过后自动清理
@@ -321,6 +323,7 @@ export const useResumeStore = defineStore(
       trashList,
       maxCount,
       currentIndex,
+      remainingSlots, // 创建前可用的简历名额，统一供各入口读取。
       editorWidth,
       focusMode,
       editingModuleKey, // 当前编辑模块标识，仅用于会话内预览提示。

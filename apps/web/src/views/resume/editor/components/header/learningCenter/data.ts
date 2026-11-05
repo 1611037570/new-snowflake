@@ -59,6 +59,7 @@ export const LEARNING_ARTICLES: LearningArticle[] = [
   { id: "spacing", category: "layout" },
   { id: "preview", category: "layout" },
   { id: "assistant", category: "ai" },
+  { id: "jobMatch", category: "ai" }, // 工作台的岗位适配与定制版本操作指引。
   { id: "contentAi", category: "ai" },
   { id: "save", category: "export" },
   { id: "export", category: "export" },

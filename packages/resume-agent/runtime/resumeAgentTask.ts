@@ -446,7 +446,7 @@ export const createResumeAgentTaskRuntime = (options: CreateResumeAgentTaskRunti
       case "scope_uncovered":
         return `这些内容还没有实际改动：${issue.detail ?? "部分模块"}。`;
       case "report_invalid":
-        return "评分报告没有按约定格式生成。";
+        return issue.text;
       case "report_mismatch":
         return "报告里列出的改动与实际写入不一致。";
       default: {
@@ -480,7 +480,7 @@ export const createResumeAgentTaskRuntime = (options: CreateResumeAgentTaskRunti
       task.phase = "incomplete";
       task.pendingInput = undefined;
     }
-    const detail = task?.phase === "waiting" && task.pendingInput
+    const detail = reason.startsWith("同一问题已连续失败") ? reason : task?.phase === "waiting" && task.pendingInput
       ? task.pendingInput.question
       : task?.blocker?.reason ?? describeIncompleteReason(issue);
     const changeNotice = completedChanges.length

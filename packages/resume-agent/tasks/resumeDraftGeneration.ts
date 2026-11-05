@@ -241,7 +241,7 @@ export const runResumeDraftGeneration = async (
     allowTaskPause: false,
     reactConfig: {
       // 为字段校验退回后的修正保留与普通助手相同的工具轮次。
-      maxSteps: 24,
+      maxSteps: 99,
       // 新建草稿需要综合稀疏资料与模块取舍，允许模型使用推理能力。
       thinking: { type: "enabled" },
       onThink: () => {
@@ -268,11 +268,12 @@ export const runResumeDraftGeneration = async (
   // 入口只描述本轮草稿目标，读取、字段核对和提交由统一任务运行规则编排。
   const messages: ChatMessage[] = [{ role: "user", content: input.brief }];
 
+  let answer = "";
   try {
-    await session.run(messages);
+    answer = await session.run(messages);
   } finally {
     options.signal?.removeEventListener("abort", abortRunner);
   }
-  if (!submittedResume) throw new Error(getResumeAiMessage("emptyGeneration"));
+  if (!submittedResume) throw new Error(session.getTask()?.phase === "incomplete" && answer.trim() ? answer : getResumeAiMessage("emptyGeneration"));
   return submittedResume;
 };

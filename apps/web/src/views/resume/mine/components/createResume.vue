@@ -10,9 +10,11 @@ import ThumbPreview from "@/views/resume/editor/preview/modes/thumb.vue";
 import ResumePreviewSkeleton from "@/views/resume/components/resumePreviewSkeleton.vue";
 import AiResumeGenerator from "@/views/resume/components/aiResumeGenerator.vue";
 import ResumeCardContainer from "./resumeCardContainer.vue";
+import { useResumeCapacity } from "../../hooks/useResumeCapacity";
 
 const resumeStore = useResumeStore();
 const router = useRouter();
+const { ensureCapacity } = useResumeCapacity();
 
 // 全部主题卡片共用同一份通用范本作内容，样式由各自主题预设提供。
 const PREVIEW_BASE_FILE = "xiaoZhou.ts";
@@ -37,10 +39,7 @@ const ensureBaseItem = async () => {
 };
 
 const open = () => {
-  if (resumeStore.resumeList.length >= resumeStore.maxCount) {
-    ElMessage.warning($t("resumeCreateMaxLimit", { max: resumeStore.maxCount }));
-    return;
-  }
+  if (!ensureCapacity()) return;
   visible.value = true;
   ensureBaseItem();
 };

@@ -6,6 +6,7 @@ import { parsePdfResume } from "../pdfParser";
 import { MAX_PDF_FILE_BYTES } from "../pdfDocument";
 import ImportResumePreview from "./importResumePreview.vue";
 import { useResumeAiAvailability } from "@/views/resume/hooks/useResumeAiAvailability";
+import { useResumeCapacity } from "@/views/resume/hooks/useResumeCapacity";
 import { hasResumeAiModel } from "@snowflake/resume-agent";
 import { useAiStore, useResumeStore } from "@/stores";
 import { computed, onBeforeUnmount, ref, watch } from "vue";
@@ -28,6 +29,7 @@ let parseController = null;
 let choosingDocument = false;
 let importVersion = 0;
 const { ensureAiAvailable } = useResumeAiAvailability();
+const { ensureCapacity } = useResumeCapacity();
 
 // 解析模型按格式区分：PDF 用简历解析角色（需图片识别），Markdown 用小舟。
 const agentModelLabel = (agent) => {
@@ -85,6 +87,7 @@ const configureParseModel = () => {
 // PDF 与 Markdown 共用选择、解析、字段核验、预览确认和取消流程。
 const importDocumentConfig = async (format) => {
   if (parsing.value || choosingDocument || pendingResume.value) return;
+  if (!ensureCapacity()) return;
   const isPdf = format === "pdf";
   const click = isPdf ? clickPdf : clickMarkdown;
   const remove = isPdf ? removePdf : removeMarkdown;
@@ -125,6 +128,8 @@ const importDocumentConfig = async (format) => {
     remove();
   }
   if (!file || !visible.value || version !== importVersion) return;
+  // 文件选择期间可能新增简历，解析请求发出前再次核对名额。
+  if (!ensureCapacity()) return;
   const controller = new AbortController();
   parseController = controller;
   parsing.value = true;
@@ -175,7 +180,7 @@ const confirmImport = () => {
 
 // 打开导入弹窗：提前判断简历数量是否已达上限
 const handleOpenImport = () => {
-  if (resumeStore.list.filter((item) => item.deletedAt === null).length >= resumeStore.maxCount) {
+  if (resumeStore.remainingSlots === 0) {
     ElMessage.warning({
       message: $t("resumeImportMaxLimit", { max: resumeStore.maxCount }),
       position: "top-right",

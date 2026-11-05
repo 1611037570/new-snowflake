@@ -20,7 +20,7 @@ const visible = ref(false);
 const flow = ref<AiGenerateFlowHandle | null>(null);
 
 // 生成结果需要更宽的画布，输入阶段沿用紧凑宽度。
-const modalWidth = computed(() => (flow.value?.hasResult ? "min(90vw, 1200px)" : "min(90vw, 720px)"));
+const modalWidth = computed(() => (flow.value?.hasResult ? "min(92vw, 1080px)" : "min(92vw, 720px)"));
 
 // 弹窗入口沿用原有调用方式：带入来源样式、预填资料与已知姓名。
 const open = (
@@ -49,8 +49,8 @@ defineExpose({ open });
 </script>
 
 <template>
-  <SfModal v-model="visible" :title="$t('resumeAiGenerateTitle')" :width="modalWidth">
-    <div class="h-[72vh] min-h-[480px]">
+  <SfModal v-model="visible" :title="$t('resumeAiGenerateTitle')" :width="modalWidth" bg-class="bg-sf-primary">
+    <div class="h-[75svh]">
       <AiGenerateFlow ref="flow" @confirm="handleConfirm" />
     </div>
   </SfModal>

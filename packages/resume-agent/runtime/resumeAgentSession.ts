@@ -6,7 +6,7 @@ import { getResumeAiMessage } from "../request/messages";
 import type { ResumeAiAgent } from "../request";
 import { resolveResumeAgentTaskProfile } from "../tasks/registry";
 import { createResumeAgentTaskRuntime } from "./resumeAgentTask";
-import type { ResumeAgentRequiredEffect } from "./types";
+import type { ResumeAgentRequiredEffect, ResumeAgentTool } from "./types";
 import type {
   ResumeAgentTaskEvidence,
   ResumeAgentTaskProfile,
@@ -101,6 +101,11 @@ export const createResumeAgentSession = async (
     instructions: taskRuntime.buildContext, // 仅简历智能体注入字段与写作规则。
     reactConfig: {
       ...options.reactConfig,
+      getToolFailure: (call, result) => {
+        const tool = businessTools.find((item) => item.name === call.function.name) as ResumeAgentTool | undefined;
+        const evaluation = tool?.taskMeta?.evaluate(result);
+        return evaluation?.status === "failed" ? evaluation.summary : options.reactConfig.getToolFailure?.(call, result);
+      }, // 采用真实业务结果识别失败，部分成功仍允许继续处理。
       initialTool: "plan_resume_task", // 保留原有简历任务规划入口。
       // 首轮只发规划工具，后续轮次恢复完整工具集。
       resolveTools: (step) => (step === 0 && planTool ? [planTool] : undefined),

@@ -49,6 +49,29 @@ const excerpts = ([before, after]: [string, string]): [string, string] => {
 
 const DIMENSIONS = ["信息完整度", "阅读效率", "职业契合度", "职业成就", "发展潜力", "职业稳定性"];
 
+// 输出与验收共用分数归一规则，不能一侧接受而另一侧把有效分数丢掉。
+const normalizeScore = (value: unknown): number | null => {
+  const score = typeof value === "string" && /^\d+(?:\.\d+)?$/.test(value.trim()) ? Number(value) : value;
+  return typeof score === "number" && Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null;
+};
+
+// 一次返回全部评分缺口，避免逐个维度触发模型重试。
+export const getOptimizationScoreIssue = (content: string): string | null => {
+  const value = readReport(content);
+  if (!Array.isArray(value.dimensions)) return "最终报告必须包含 dimensions（六维评分数组），请在当前报告中一次补齐评分，不要重新修改简历或重复读取。";
+  const issues: string[] = [];
+  if (value.dimensions.length !== DIMENSIONS.length) issues.push("评分数组必须恰好包含六个固定维度");
+  for (const name of DIMENSIONS) {
+    const entries = value.dimensions.filter((item) => isObject(item) && item.name === name);
+    if (entries.length !== 1) { issues.push(`${name}缺失或重复`); continue; }
+    const score = entries[0]!.score;
+    if (normalizeScore(score) == null && score !== null) issues.push(`${name}需提供零至一百分的数值或明确为 null`);
+    // 有可优化正文即可以评价信息与表达，不能把所有可判断维度一起省略。
+    if (["信息完整度", "阅读效率"].includes(name) && normalizeScore(score) == null) issues.push(`${name}须根据当前草稿给出分数`);
+  }
+  return issues.length ? `评分尚未完成：${issues.join("；")}。请基于已读取并核对的最终草稿，在同一份 JSON 中一次修正以上全部评分，不重复优化或调用工具。` : null;
+};
+
 // 实际改动以最终数据差异为准；模型只补充原因、建议与可用评分，不能伪造改动。
 export const buildOptimizationReport = (
   content: string,
@@ -81,10 +104,10 @@ export const buildOptimizationReport = (
   }
   const dimensions = DIMENSIONS.map((name) => {
     const dimension = Array.isArray(value.dimensions) ? value.dimensions.find((item) => isObject(item) && item.name === name) : undefined;
-    const score = isObject(dimension) ? dimension.score : null;
+    const score = isObject(dimension) ? normalizeScore(dimension.score) : null;
     return {
       name, // 展示维度按前端约定排列，模型无需保持顺序。
-      score: completed && typeof score === "number" && Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null, // 不完整或无依据的评分不展示为零分。
+      score: completed ? score : null, // 未完成报告不冒充完整评分。
     };
   });
   const scores = dimensions.flatMap((item) => item.score == null ? [] : [item.score]);

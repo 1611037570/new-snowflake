@@ -42,6 +42,11 @@ const navGroups = [
         icon: "lucide:scan-text", // 简历优化导航图标。
       },
       {
+        key: "resumeNavJobMatch", // 岗位适配入口文案标识。
+        path: "/resume/job-match", // 独立岗位适配页面路径。
+        icon: "ph:crosshair-duotone", // 复用已有岗位图标。
+      },
+      {
         key: "resumeNavInterview", // 面试训练入口文案标识。
         path: "/resume/interview", // 独立面试训练页面路径。
         icon: "ph:microphone-duotone", // 面试训练导航图标。

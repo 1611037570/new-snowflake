@@ -9,6 +9,7 @@ import Share from "./components/share.vue";
 import { $t } from "@/locales";
 import { defineAsyncComponent, onBeforeUnmount, onMounted } from "vue";
 import eventBus from "@/utils/modules/eventBus";
+import { useResumeCapacity } from "./hooks/useResumeCapacity";
 
 // 只有编辑器内的一键优化使用弹窗，其余入口统一到优化页内嵌展开。
 const AiResumeOptimizer = defineAsyncComponent(() => import("./components/aiResumeOptimizer.vue"));
@@ -16,6 +17,7 @@ const optimizerVisible = ref(false);
 const optimizationResumeId = ref("");
 const openOptimizer = (resumeId) => {
   if (optimizerVisible.value || resumeStore.isGenerating) return;
+  if (!ensureCapacity()) return;
   const id = typeof resumeId === "string" && resumeId ? resumeId : resumeStore.currentItem?.id;
   // 非编辑器页面没有可覆盖的编辑区，直接跳到优化页，避开弹窗形态。
   if (route.name !== "editor") {
@@ -34,6 +36,7 @@ const route = useRoute();
 const isResumeHome = computed(() => route.path.replace(/\/+$/, "") === "/resume");
 const router = useRouter();
 const resumeStore = useResumeStore();
+const { ensureCapacity } = useResumeCapacity();
 const resumeReady = ref(false);
 // 当前路由读取失败时提供重试，避免停留在无限加载状态
 const resumeLoadError = ref(false);
@@ -90,8 +93,8 @@ if (!route.meta.hideResumeLayout) statisticsStore.initStartDate();
     <!-- 工作区由侧栏与内容并排撑开，侧栏宽度跟随内容，窄屏顶部入口在内容上留出高度。 -->
     <div v-else class="flex min-h-0 flex-1 overflow-hidden bg-sf-page text-sf-text">
       <ResumeHeader />
-      <div class="flex min-w-0 flex-1 flex-col overflow-hidden pt-12 md:pt-0">
-        <router-view class="flex-1 overflow-hidden" />
+      <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pt-12 md:pt-0">
+        <router-view class="min-h-0 flex-1 overflow-hidden" />
         <!-- <SfFooter /> -->
       </div>
     </div>

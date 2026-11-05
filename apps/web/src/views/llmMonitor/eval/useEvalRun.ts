@@ -26,7 +26,7 @@ const DAILY_LIMIT = 3;
 // 配额记录键
 const QUOTA_KEY = "resume-eval-quota";
 // 单条用例的最大推理轮次，与线上助手保持同一量级
-const MAX_STEPS = 16;
+const MAX_STEPS = 99;
 
 type Quota = {
   // 记录所属日期

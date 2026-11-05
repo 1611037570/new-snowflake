@@ -40,8 +40,12 @@ export interface ReactConfig {
   initialTool?: string;
   // 按轮次裁剪本轮可用工具；返回 undefined 表示沿用完整工具集。
   resolveTools?: (step: number) => ReactTool[] | undefined;
-  // 最大循环步数，防止死循环
+  // 最大循环步数，默认九十九轮。
   maxSteps?: number;
+  // 同一工具或完成检查连续出现相同失败的上限，默认三次后退出。
+  repeatedFailureLimit?: number;
+  // 业务方判断工具结果中的失败原因，空值时使用通用结果判断。
+  getToolFailure?: (toolCall: ToolCall, result: unknown) => string | null | undefined;
   // 可选的上下文预算与摘要策略，每轮请求前处理待发送历史。
   context?: ContextCompactionOptions;
   // 模型名，存在时透传到请求 options
@@ -62,7 +66,7 @@ export interface ReactConfig {
   }) => unknown;
   // 最终答案提交前检查任务是否完成；返回文字时把原因送回同一循环继续执行，返回空值时允许结束。
   beforeFinal?: (answer: string) => string | null | undefined | Promise<string | null | undefined>;
-  // 完成校验打回的重试次数上限，省略时按三次；超过后直接按未完成收口，不占用工具轮次。
+  // 完成检查累计修正上限，默认九十九次，仍受总轮次和相同失败上限约束。
   finalRetryLimit?: number;
   // 候选答案未通过完成检查时通知宿主清理本轮临时展示。
   onFinalRetry?: (reason: string) => void;

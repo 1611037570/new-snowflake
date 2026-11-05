@@ -8,10 +8,12 @@ import { createResumeChangeObserver } from "../../assistant/changes/captureChang
 import type { ResumeChange, ResumeChangeState } from "../../assistant/changes/types";
 import { describeResumeAiError, runOneKeyOptimization, type ResumeOptimizationInput, type ResumeReport } from "@snowflake/resume-agent";
 import { resumeContextCompaction } from "@/apis/llm/contextCompaction";
+import { useResumeCapacity } from "../../hooks/useResumeCapacity";
 
 // 一次生成完整优化草稿和报告，用户在原地预览后决定保存或放弃。
 export const useResumeOptimization = () => {
   const store = useResumeStore();
+  const { ensureCapacity } = useResumeCapacity();
   const draft = ref<any>(null);
   const context = useResumeContext(() => draft.value || {});
   const generating = ref(false);
@@ -44,6 +46,8 @@ export const useResumeOptimization = () => {
 
   const run = async (resumeId: string, input: ResumeOptimizationInput, continueExisting = false) => {
     if (generating.value || saving.value) return;
+    // 所有优化入口在请求前统一检查容量，不能等开始后再提示。
+    if (!ensureCapacity()) return;
     if (store.isGenerating) { error.value = "另一个简历 AI 任务正在运行，请稍后再试。"; return; }
     // 重试从保留的草稿继续，原简历快照与已经完成的对比详情不丢失。
     const kept = continueExisting && pendingItem.value && report.value && baseline?.id === resumeId ? {
@@ -205,6 +209,28 @@ export const useResumeOptimization = () => {
     } finally { saving.value = false; }
   };
 
+  // 岗位定制另存完整候选，沿用已有复制逻辑保留主题、媒体和模块配置。
+  const applyCopy = async (title: string): Promise<boolean> => {
+    if (saving.value || !pendingItem.value || disposed) return false;
+    if (accepted.value) return persist();
+    // 生成期间可能新增了其他简历，另存前再次检查；保存重试不重复占名额。
+    if (!ensureCapacity()) return false;
+    saving.value = true;
+    error.value = "";
+    try {
+      const copy = JSON.parse(JSON.stringify(pendingItem.value));
+      copy.usage = { ...copy.usage, titleMode: "custom", customTitle: title.trim() };
+      const id = store.duplicateResume(copy);
+      if (!id) throw new Error("未能创建岗位专属简历，请检查简历数量上限后重试。");
+      // 创建后立即标记，保存重试只做持久化，避免重复创建。
+      accepted.value = true;
+      return await persist();
+    } catch (cause) {
+      error.value = cause instanceof Error ? cause.message : "另存岗位简历失败，请重试。";
+      return false;
+    } finally { saving.value = false; }
+  };
+
   // 调整输入只放弃当前候选，不重新请求，也不动正式简历。
   const backToInput = () => {
     if (saving.value || accepted.value) return;
@@ -217,5 +243,5 @@ export const useResumeOptimization = () => {
   };
 
   onBeforeUnmount(() => { disposed = true; cancel(); });
-  return { generating, stage, error, report, changes, originalItem, pendingItem, accepted, hasChanges, saving, saveError, incomplete, notice, run, cancel, apply, persist, backToInput };
+  return { generating, stage, error, report, changes, originalItem, pendingItem, accepted, hasChanges, saving, saveError, incomplete, notice, run, cancel, apply, applyCopy, persist, backToInput };
 };

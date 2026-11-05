@@ -357,7 +357,7 @@ export const useChatRequest = ({
         },
         reactConfig: {
           // 为工具修正和报告复核保留轮次，同时限制异常循环。
-          maxSteps: 24,
+          maxSteps: 99,
           // 超出输入预算时压缩较早的历史，避免长对话溢出与指令失效
           context: resumeContextCompaction,
           onToolError,
@@ -393,7 +393,8 @@ export const useChatRequest = ({
           // ReAct 自行依据任务理解与工具结果收口，写入记录只供撤回使用。
           lastMsg.content = answer;
           lastMsg.resumeTask = task;
-          lastMsg.requestStatus = "success";
+          // 自动退出属于未完成，保留已有内容与改动，同时开放重试。
+          lastMsg.requestStatus = task?.phase === "incomplete" ? "error" : "success";
           lastMsg.stepLabel = "";
           // 完成后保留过程区的展开状态，方便直接查看本次执行内容。
           scrollToBottom();

@@ -39,7 +39,9 @@ const radarPoint = (index: number, ratio: number) => {
   };
 };
 // 缺分维度会把形状拉向圆心造成误读，六维齐全时才画雷达图。
-const allScored = computed(() => props.report.dimensions.every((item) => item.score != null));
+const scoredDimensions = computed(() => props.incomplete ? [] : props.report.dimensions.filter((item) => item.score != null));
+const hasScore = computed(() => !props.incomplete && props.report.totalScore != null && scoredDimensions.value.length > 0);
+const allScored = computed(() => scoredDimensions.value.length === DIMENSION_KEYS.length);
 const radarRings = computed(() => RADAR_LEVELS.map((level) =>
   DIMENSION_KEYS.map((_, index) => radarPoint(index, level)).map((point) => `${point.x},${point.y}`).join(" ")));
 // 六条轴线固定按满分半径绘制，不随分数变化。
@@ -52,20 +54,20 @@ const radarPolygon = computed(() => radarShape.value.map((point) => `${point.x},
   <article class="flex flex-col gap-3 text-sf-text">
     <!-- 报告使用本地组件呈现，模型只提供数据，不控制布局或生成 HTML。 -->
     <header class="flex flex-wrap items-start gap-3 rounded-2xl border border-sf-b bg-sf-bg p-3">
-      <div class="relative flex h-24 w-24 shrink-0 items-center justify-center">
+      <div v-if="hasScore" class="relative flex h-24 w-24 shrink-0 items-center justify-center">
         <svg viewBox="0 0 100 100" class="h-24 w-24 -rotate-90" aria-hidden="true">
           <circle cx="50" cy="50" :r="RING_RADIUS" fill="none" stroke-width="8" class="stroke-sf-bg-2" />
           <circle cx="50" cy="50" :r="RING_RADIUS" fill="none" stroke-width="8" stroke-linecap="round" :stroke-dasharray="ringDash" class="stroke-sf-theme" />
         </svg>
         <div class="absolute flex flex-col items-center">
-          <strong class="text-2xl font-semibold">{{ report.totalScore ?? '—' }}</strong>
+          <strong class="text-2xl font-semibold">{{ report.totalScore }}</strong>
           <span class="text-xs text-sf-text-3">综合评分</span>
         </div>
       </div>
       <div class="flex min-w-0 flex-1 flex-col gap-3">
         <div class="flex flex-wrap items-center gap-3">
           <h2 class="text-base font-semibold">{{ incomplete ? '部分结果说明' : '优化报告' }}</h2>
-          <span v-if="grade" class="rounded-full bg-sf-theme-3 px-3 py-1 text-xs text-sf-theme">{{ grade }}</span>
+          <span v-if="hasScore && grade" class="rounded-full bg-sf-theme-3 px-3 py-1 text-xs text-sf-theme">{{ grade }}</span>
         </div>
         <p class="text-sm leading-6 text-sf-text-2">{{ report.summary }}</p>
         <div class="flex flex-wrap items-center gap-3 text-xs text-sf-text-3">
@@ -80,7 +82,7 @@ const radarPolygon = computed(() => radarShape.value.map((point) => `${point.x},
       </div>
     </header>
 
-    <section v-if="report.dimensions.some((item) => item.score != null)" class="flex flex-col gap-3 rounded-xl border border-sf-b bg-sf-primary p-3">
+    <section v-if="scoredDimensions.length" class="flex flex-col gap-3 rounded-xl border border-sf-b bg-sf-primary p-3">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <h3 class="text-sm font-semibold">六维评估</h3>
         <span class="text-xs text-sf-text-3">满分 100，缺少依据的维度不计入总分</span>
@@ -95,7 +97,7 @@ const radarPolygon = computed(() => radarShape.value.map((point) => `${point.x},
           </svg>
         </div>
         <div class="flex flex-col gap-3">
-          <div v-for="dimension in report.dimensions" :key="dimension.name" class="flex flex-col gap-3">
+          <div v-for="dimension in scoredDimensions" :key="dimension.name" class="flex flex-col gap-3">
             <div class="flex items-center justify-between gap-3 text-xs">
               <span class="text-sf-text-2">{{ dimension.name }}</span>
               <strong class="text-sm font-semibold" :class="dimension.score == null ? 'text-sf-text-3' : ''">{{ dimension.score ?? '不适用' }}</strong>

@@ -60,7 +60,7 @@ export const runInterviewTask = async (action: InterviewAction, input: Interview
     assertActive, // 停止后不再执行工具或接收结果。
     instructions, // 当前动作只接收所需的公共规则与本类技能。
     reactConfig: {
-      maxSteps: 12, // 允许读取参考资料与修正本轮内容。
+      maxSteps: 99, // 允许读取参考资料与修正本轮内容。
       initialTool: requireResume ? "read_interview_resume" : undefined, // 正式出题与复盘先读简历，逐题参考回答按需读取。
       thinking: { type: "disabled" /* 不展示内部思考。 */ }, // 保持面试文本响应方式。
       beforeFinal: (answer) => {
