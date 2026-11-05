@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { ResumeReport } from "@snowflake/resume-agent";
+import { RESUME_SCORE_DIMENSIONS, type ResumeReport } from "@snowflake/resume-agent";
 
 const props = defineProps<{
   report: ResumeReport; // 根据实际草稿差异整理的报告。
   incomplete: boolean; // 部分草稿不能展示为整份优化成功。
 }>();
 
-// 六维固定顺序，与雷达图轴顺序一致。
-const DIMENSION_KEYS = ["信息完整度", "阅读效率", "职业契合度", "职业成就", "发展潜力", "职业稳定性"];
 // 总分只做粗略归纳，阈值按百分制四档划分，不参与任何筛选判断。
 const grade = computed(() => {
   const score = props.report.totalScore;
@@ -41,11 +39,11 @@ const radarPoint = (index: number, ratio: number) => {
 // 缺分维度会把形状拉向圆心造成误读，六维齐全时才画雷达图。
 const scoredDimensions = computed(() => props.incomplete ? [] : props.report.dimensions.filter((item) => item.score != null));
 const hasScore = computed(() => !props.incomplete && props.report.totalScore != null && scoredDimensions.value.length > 0);
-const allScored = computed(() => scoredDimensions.value.length === DIMENSION_KEYS.length);
+const allScored = computed(() => scoredDimensions.value.length === RESUME_SCORE_DIMENSIONS.length);
 const radarRings = computed(() => RADAR_LEVELS.map((level) =>
-  DIMENSION_KEYS.map((_, index) => radarPoint(index, level)).map((point) => `${point.x},${point.y}`).join(" ")));
+  RESUME_SCORE_DIMENSIONS.map((_, index) => radarPoint(index, level)).map((point) => `${point.x},${point.y}`).join(" ")));
 // 六条轴线固定按满分半径绘制，不随分数变化。
-const radarAxes = computed(() => DIMENSION_KEYS.map((_, index) => radarPoint(index, 1)));
+const radarAxes = computed(() => RESUME_SCORE_DIMENSIONS.map((_, index) => radarPoint(index, 1)));
 const radarShape = computed(() => props.report.dimensions.map((item, index) => radarPoint(index, (item.score ?? 0) / 100)));
 const radarPolygon = computed(() => radarShape.value.map((point) => `${point.x},${point.y}`).join(" "));
 </script>

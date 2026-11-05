@@ -19,11 +19,10 @@ export { CONTENT_REWRITE_TASK, LANGUAGE_NAMES } from "./tasks/contentRewrite";
 export type { ContentRewriteInput } from "./tasks/contentRewrite";
 export { runResumeDraftGeneration } from "./tasks/resumeDraftGeneration";
 export { runOneKeyOptimization } from "./tasks/runOneKeyOptimization";
-export { runJobMatch } from "./tasks/jobMatch";
-export type { JobMatchInput, JobMatchRequirement, JobMatchReport, RunJobMatchOptions } from "./tasks/jobMatch";
 export { getResumeOptimizationBlockReason } from "./tasks/optimizationEligibility";
 export type { ResumeOptimizationInput, RunResumeOptimizationOptions, ResumeOptimizationResult } from "./tasks/runOneKeyOptimization";
 export type { ResumeReport } from "./reports/resumeReport";
+export { RESUME_SCORE_DIMENSIONS } from "./reports/resumeReport";
 export type {
   ResumeDraftGenerationInput,
   ResumeDraftGenerationStage,

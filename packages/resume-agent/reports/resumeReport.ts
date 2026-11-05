@@ -46,7 +46,7 @@ export interface ResumeReport {
 }
 
 // 评分顺序与技能约定一致，拒绝缺失、重复或臆造维度
-const DIMENSION_NAMES = [
+export const RESUME_SCORE_DIMENSIONS = [
   "信息完整度", "阅读效率", "职业契合度", "职业成就", "发展潜力", "职业稳定性",
 ];
 const isScore = (value: unknown): value is number =>
@@ -60,9 +60,9 @@ const isStringList = (value: unknown): value is string[] =>
 const normalizeReport = (value: unknown): ResumeReport | null => {
   if (!isObject(value) || !(value.totalScore === null || isScore(value.totalScore))) return null;
   const dimensions = value.dimensions;
-  if (!Array.isArray(dimensions) || dimensions.length !== DIMENSION_NAMES.length) return null;
+  if (!Array.isArray(dimensions) || dimensions.length !== RESUME_SCORE_DIMENSIONS.length) return null;
   if (!dimensions.every((item, index) => isObject(item) &&
-    item.name === DIMENSION_NAMES[index] && (item.score === null || isScore(item.score)))) return null;
+    item.name === RESUME_SCORE_DIMENSIONS[index] && (item.score === null || isScore(item.score)))) return null;
   const checks = value.checks ?? [];
   const changes = value.changes ?? [];
   const todo = value.todo ?? [];

@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue"
 import { onBeforeRouteLeave, useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import { useResumeStore } from "@/stores";
-import { describeResumeAiError, getResumeOptimizationBlockReason, type JobMatchInput } from "@snowflake/resume-agent";
+import { describeResumeAiError, getResumeOptimizationBlockReason } from "@snowflake/resume-agent";
 import { useResumeName } from "../hooks/useResumeName";
 import { createResumeSnapshotForAi } from "../shared/resumeSnapshot";
 import OptimizationPanel from "../components/aiOptimize/optimizationPanel.vue";
@@ -20,7 +20,12 @@ const loading = ref(true);
 const loadError = ref("");
 const error = ref("");
 const openingDraft = ref(false);
-const input = reactive<JobMatchInput>({ position: "", company: "", jd: "" });
+// 表单只保存定制输入，不再依赖已删除的独立分析任务。
+const input = reactive({
+  position: "", // 本次定制的目标岗位。
+  company: "", // 用于区分专属版本的目标公司。
+  jd: "", // 用户粘贴的岗位要求。
+});
 const selectedResume = computed(() => store.resumeList.find((item) => item.id === selectedId.value));
 // 定制开始时核对内容、布局和脱敏选择，避免使用过期资料。
 const fingerprint = (item: any) => JSON.stringify([item?.data, item?.config, item?.ui, store.desensitizeMode]);

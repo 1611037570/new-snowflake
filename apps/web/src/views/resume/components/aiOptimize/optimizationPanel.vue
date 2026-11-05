@@ -90,7 +90,6 @@ const start = (continueExisting = false) => {
     jd: input.jd.trim(), // 本轮岗位说明。
     focus: input.focus, // 当前优化重点。
     jobAdaptation: !!props.copyTitle, // 岗位定制采用严格事实边界。
-    adaptationReport: props.copyTitle ? props.initialInput?.adaptationReport : undefined, // 沿用已核对的分析，不丢失前序结论。
   }, continueExisting);
 };
 
