@@ -18,6 +18,7 @@ export const PREVIEW_TITLES: Record<PreviewLang, Record<string, string>> = {
   zh: {
     contact: "联系方式", // 青线双栏个人信息区的分组标题
     account: "社交账号",
+    jobIntent: "求职意向", // 独立求职意向模块标题。
     education: "教育经历",
     skill: "专业技能",
     advantage: "个人优势",
@@ -33,6 +34,7 @@ export const PREVIEW_TITLES: Record<PreviewLang, Record<string, string>> = {
   en: {
     contact: "Contact", // 青线双栏个人信息区的分组标题
     account: "Social Accounts",
+    jobIntent: "Job Preferences", // 独立求职意向模块标题。
     education: "Education",
     skill: "Skills",
     advantage: "Strengths",
@@ -48,6 +50,7 @@ export const PREVIEW_TITLES: Record<PreviewLang, Record<string, string>> = {
   ja: {
     contact: "連絡先", // 青线双栏个人信息区的分组标题
     account: "ソーシャルアカウント",
+    jobIntent: "希望条件", // 独立求职意向模块标题。
     education: "学歴",
     skill: "スキル",
     advantage: "強み",
@@ -63,6 +66,7 @@ export const PREVIEW_TITLES: Record<PreviewLang, Record<string, string>> = {
   ko: {
     contact: "연락처", // 青线双栏个人信息区的分组标题
     account: "소셜 계정",
+    jobIntent: "희망 근무 조건", // 独立求职意向模块标题。
     education: "학력",
     skill: "전문 기술",
     advantage: "강점",
@@ -78,6 +82,7 @@ export const PREVIEW_TITLES: Record<PreviewLang, Record<string, string>> = {
   fr: {
     contact: "Contact", // 青线双栏个人信息区的分组标题
     account: "Comptes sociaux",
+    jobIntent: "Préférences professionnelles", // 独立求职意向模块标题。
     education: "Formation",
     skill: "Compétences",
     advantage: "Atouts",
@@ -93,6 +98,7 @@ export const PREVIEW_TITLES: Record<PreviewLang, Record<string, string>> = {
   de: {
     contact: "Kontakt", // 青线双栏个人信息区的分组标题
     account: "Soziale Konten",
+    jobIntent: "Berufliche Präferenzen", // 独立求职意向模块标题。
     education: "Ausbildung",
     skill: "Fähigkeiten",
     advantage: "Stärken",
@@ -108,6 +114,7 @@ export const PREVIEW_TITLES: Record<PreviewLang, Record<string, string>> = {
   es: {
     contact: "Contacto", // 青线双栏个人信息区的分组标题
     account: "Cuentas sociales",
+    jobIntent: "Preferencias laborales", // 独立求职意向模块标题。
     education: "Educación",
     skill: "Habilidades",
     advantage: "Fortalezas",
@@ -123,6 +130,7 @@ export const PREVIEW_TITLES: Record<PreviewLang, Record<string, string>> = {
   ru: {
     contact: "Контакты", // 青线双栏个人信息区的分组标题
     account: "Соцсети",
+    jobIntent: "Пожелания к работе", // 独立求职意向模块标题。
     education: "Образование",
     skill: "Навыки",
     advantage: "Сильные стороны",

@@ -56,6 +56,9 @@ export interface ResumeUi {
     avatar: ResumeAvatarAppearance; // 头像比例、形状、圆角与用户尺寸覆盖设置
     logo: ResumeSchoolLogoAppearance; // 校徽展示宽度与上传时确定的裁切比例
   };
+  jobIntent: { // 求职意向展示方式
+    infoMode: "text" | "icon" | "none"; // 文字标签、图标或仅内容。
+  };
   skill: { // 专业技能展示方式
     layout: string; // 正文或技能评分列表布局
     columns: number; // 技能评分列表列数

@@ -56,7 +56,7 @@ export const runOneKeyOptimization = async (
     source: "oneKeyOptimize", // 复用一键优化的任务约定。
     capabilities: resumeTaskCapabilities, // 恢复通用能力目录，由 Agent 按目标选择写作、匹配和评估方法。
     tools: [
-      createSkillReferenceTool(resumeReferenceSkills),
+      createSkillReferenceTool(resumeReferenceSkills, options.context.getResumeModuleKeys),
       ...createResumeTools({ ...options.context, allowModuleTitleEdit: false })
         .filter((tool) => tool.name !== "update_resume_language"),
     ], // 只提供资料读取、内容写入与参考知识工具。

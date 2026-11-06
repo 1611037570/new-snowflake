@@ -8,6 +8,7 @@ import {
 import { createUserCustomField, isUserCustomFieldKey } from "./useUserCustomField";
 import { applyUserSubtitleOrder } from "./useUserSubtitle";
 import { localizeResumeConfig } from "./useResumeEditorLocale";
+import { getResumeFieldOwner } from "@snowflake/resume-core";
 
 // 自定义模块：按实际 key 重写模板，标题取自模块 ui
 function rewriteCustomFieldByKey(field: any, customKey: string, customTitle: string) {
@@ -46,6 +47,7 @@ export function initializeDefaultAddedFields(data: Record<string, any>) {
 
 // 简历模块顺序展开为可渲染的完整表单定义
 export function expandConfigModules(modules: any[], data: any) {
+  const moduleKeys = modules.map((module: any) => module.key);
   const expanded = modules.map((item: any) => {
     const template = getModuleTemplate(item.key);
     if (!template) return item;
@@ -56,6 +58,14 @@ export function expandConfigModules(modules: any[], data: any) {
     }
     appendUserCustomFields(field, item);
     restoreFieldOrder(field, item);
+    // 编辑器与 AI 共用字段归属规则，递归移除已经归属其他模块的字段。
+    const keepOwnedFields = (children: any[]): any[] => children
+      .filter((child: any) => getResumeFieldOwner(field.key, child.key, moduleKeys) === field.key)
+      .map((child: any) => {
+        if (Array.isArray(child.fields)) child.fields = keepOwnedFields(child.fields);
+        return child;
+      });
+    if (Array.isArray(field.fields)) field.fields = keepOwnedFields(field.fields);
     placeUserMedia(field);
     placeUserSubtitle(field);
     return field;

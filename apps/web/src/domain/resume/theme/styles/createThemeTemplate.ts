@@ -92,6 +92,7 @@ export const resolveThemeTemplate = (definition: ResumeThemeDefinition): ResumeT
       logo: { ...DEFAULT_UI.user.logo, ...ui.user?.logo }, // 校徽大小与裁切比例按字段合并
     },
     skill: { ...DEFAULT_UI.skill, ...ui.skill },
+    jobIntent: { ...DEFAULT_UI.jobIntent, ...ui.jobIntent }, // 求职意向展示模式独立合并与保存。
     honor: { ...DEFAULT_UI.honor, ...ui.honor }, // 荣誉布局沿用主题或默认展示方式。
   };
 

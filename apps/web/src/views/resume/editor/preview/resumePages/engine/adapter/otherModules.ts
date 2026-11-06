@@ -178,6 +178,24 @@ const createCustomModuleFallback = (context: LayoutAdapterContext): LayoutNode[]
 
 /** 注册剩余内置模块和自定义模块适配器 */
 export const registerOtherModuleAdapters = (registry: LayoutAdapterRegistry) => {
+  // 求职意向作为独立正文块参与所有主题的测量、分页与导出。
+  registry.register("jobIntent", (context) => {
+    const module = context.data.jobIntent as { data?: Record<string, unknown> /* 求职字段值。 */, ui?: Record<string, any> /* 字段展示设置。 */ } | undefined;
+    // 字段顺序随节点载荷参与签名，拖拽后同步更新测量与导出。
+    const config = context.config as { fields?: Array<{ key: string /* 模块标识。 */; fields?: Array<{ key?: string /* 字段标识。 */ }> /* 模块字段顺序。 */ }> /* 已展开模块配置。 */ } | undefined;
+    const fieldOrder = config?.fields?.find((field) => field.key === "jobIntent")?.fields?.map((field) => field.key).filter(Boolean) || [];
+    const hasContent = Object.entries(module?.data || {}).some(([key, value]) =>
+      module?.ui?.[key]?.hidden !== true && typeof value === "string" && value.trim(),
+    );
+    return hasContent ? [{
+      id: "jobIntent", // 求职意向正文节点。
+      sourceModuleKey: "jobIntent", // 所属模块标识。
+      type: "group", // 五项资料整体排版。
+      contentKind: "jobIntent", // 使用求职意向内容组件。
+      splitMode: "whole", // 求职资料作为完整信息块分页。
+      payload: { ...module, fieldOrder /* 当前求职字段排列顺序。 */ }, // 字段值、展示设置和顺序共同参与内容变化签名。
+    }] : [];
+  });
   registry.register("user", createUserModuleAdapter, {
     title: false, // 个人信息组件自行展示姓名
     paragraphSpacing: false, // 页眉不插入条目段间距

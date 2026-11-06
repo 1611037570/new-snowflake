@@ -139,9 +139,9 @@ export const exportMarkdown = (onSuccess?: () => void, itemOverride?: any) => {
     .map((field: any) => field?.key)
     .filter(Boolean);
   const moduleKeys = [...new Set([...configuredKeys, ...Object.keys(data)])];
-  // 自动标题也使用可见字段，避免隐藏姓名或岗位后仍从正文标题泄漏
+  // 自动标题也过滤求职意向的隐藏状态，避免岗位从独立模块泄漏。
   const titleData = { ...data };
-  for (const key of ["user", "education"]) {
+  for (const key of ["user", "jobIntent", "education"]) {
     const source = titleData[key];
     if (!source) continue;
     const module = { ...source, data: { ...source.data } };

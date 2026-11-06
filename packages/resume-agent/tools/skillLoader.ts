@@ -1,11 +1,11 @@
-import type { Skill, SkillResource } from "../types";
+import type { Skill, SkillLoadContext, SkillResource } from "../types";
 
 // 目录只列标识与名称，用途摘要留在正文里，减少工具声明的固定开销
 const describeCatalog = (resources: SkillResource[]) =>
   resources.map((resource) => `${resource.id}：${resource.name}`).join("\n");
 
 // 简历保持自己的资料目录与工具身份，支持按模块只读取局部正文
-export const createSkillReferenceTool = (skills: SkillResource[]) => {
+export const createSkillReferenceTool = (skills: SkillResource[], getResumeModuleKeys?: () => string[]) => {
   const references = skills.filter((resource) => resource.role === "reference");
   const resourceMap = new Map(references.map((resource) => [resource.id, resource]));
   // 本次请求内已经返回过的正文分片，重复读取不再注入全文
@@ -33,8 +33,12 @@ export const createSkillReferenceTool = (skills: SkillResource[]) => {
       const resource = resourceMap.get(args?.guidanceId ?? "");
       if (!resource) return { accepted: false, error: "未找到对应的参考资料" };
       const chunkKey = typeof args?.module === "string" ? args.module.trim() : "";
+      // 完整模块清单仅用于字段归属，不读取额外模块内容。
+      const moduleKeys = getResumeModuleKeys?.();
+      const loadContext: SkillLoadContext = { moduleKeys /* 当前简历结构，具体知识自行决定如何使用。 */ };
       // 同一资料的不同分片分别去重，避免整份正文重复进入上下文
-      const deliveryKey = chunkKey ? `${resource.id}@${chunkKey}` : resource.id;
+      const chunkId = chunkKey ? `${resource.id}@${chunkKey}` : resource.id;
+      const deliveryKey = moduleKeys ? `${chunkId}@${[...moduleKeys].sort().join(",")}` : chunkId;
       if (delivered.has(deliveryKey)) {
         return {
           accepted: true, // 当前会话已经取得该资料分片。
@@ -46,9 +50,9 @@ export const createSkillReferenceTool = (skills: SkillResource[]) => {
       }
       let skill: Skill;
       if (chunkKey && "loadVariant" in resource && resource.loadVariant) {
-        skill = await resource.loadVariant(chunkKey);
+        skill = await resource.loadVariant(chunkKey, loadContext);
       } else {
-        skill = "load" in resource ? await resource.load() : resource;
+        skill = "load" in resource ? await resource.load(loadContext) : resource;
       }
       if (skill.id !== resource.id || skill.role !== resource.role || skill.name !== resource.name) {
         throw new Error(`参考资料注册不一致：${resource.id}`);

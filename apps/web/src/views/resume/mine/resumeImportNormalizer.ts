@@ -5,6 +5,7 @@ import { translateResumeEditorText } from "@/stores/modules/resume/hooks/useResu
 import { RESUME_SCHEMA, normalizeRichTextHtml, resolveResumeModuleSchema, type ResumeFieldSchema, type ResumeModuleSchema } from "@snowflake/resume-core";
 import { assertResumeAiResponseComplete, readResumeAiResponseText } from "@snowflake/resume-agent";
 import { isContentEmpty } from "../shared/validData";
+import { moveToJobIntent } from "@/stores/modules/resume/hooks/useJobIntent";
 
 const MODULE_SCHEMA = new Map(
   RESUME_SCHEMA.filter((module) => module.kind !== "custom").map((module) => [module.key, module]),
@@ -208,6 +209,8 @@ export const normalizeResumeData = (parsed: Record<string, any>) => {
   // 只在完全没有可用内容时失败，单个字段不符合格式不会拦截整份简历。
   if (!Object.keys(data).length) throw new Error($t("resumeImportNoContent"));
   if (!data.user) data.user = { data: {} };
+  // 导入已包含独立模块时统一字段归属，避免个人信息重复展示。
+  if (data.jobIntent) moveToJobIntent({ data });
   const modules = MODULE_ORDER.filter((key) => data[key]).map((key) => ({ key }));
   return {
     // 可交给简历仓库的模块数据

@@ -12,6 +12,7 @@ import Icon from "../icon.vue";
 import EditableTitle from "./editableTitle.vue";
 import SkillDropdown from "./skillDropdown.vue";
 import HonorDropdown from "./honorDropdown.vue";
+import JobIntentDropdown from "./jobIntentDropdown.vue";
 import HelpCenter from "./helpCenter.vue";
 import { $t } from "@/locales";
 const { proxy } = getCurrentInstance();
@@ -69,7 +70,9 @@ const hidden = defineModel("hidden", {
 });
 
 function del() {
-  proxy.$confirm($t("deleteModuleConfirm", { name: title.value }), $t("deleteConfirm")).then(() => {
+  // 求职意向删除后回迁资料，在确认中明确保留内容。
+  const message = currentForm.value.key === "jobIntent" ? $t("deleteJobIntentConfirm") : $t("deleteModuleConfirm", { name: title.value });
+  proxy.$confirm(message, $t("deleteConfirm")).then(() => {
     resumeStore.removeModule(currentForm.value.key);
   });
 }
@@ -130,6 +133,10 @@ function handleAdd() {
               <!-- 荣誉证书提供文本描述、标签、笔记风、清单和详情卡片布局。 -->
               <template v-else-if="currentForm.key === 'honor'" #actions>
                 <HonorDropdown />
+              </template>
+              <!-- 求职意向单独设置图标、文字标签或仅内容。 -->
+              <template v-else-if="currentForm.key === 'jobIntent'" #actions>
+                <JobIntentDropdown />
               </template>
             </EditableTitle>
           </div>

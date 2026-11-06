@@ -1,4 +1,6 @@
 <script setup>
+import { getResumeJobField } from "@snowflake/resume-core";
+// 求职方向跟随独立模块或个人信息的实际数据。
 import { computed, ref } from "vue";
 import WangEditor from "@/components/business/wangEditor";
 import { useResumeStore } from "@/stores";
@@ -61,8 +63,8 @@ const aiCountOptions = [1, 2, 3];
 
 const resumeStore = useResumeStore();
 const { currentData } = storeToRefs(resumeStore);
-// 所有范例都按个人信息中的求职岗位匹配，避免使用经历自身的岗位或项目名称。
-const targetPosition = computed(() => currentData.value?.user?.data?.position ?? "");
+// 所有范例按简历的求职岗位匹配，兼容独立求职意向模块。
+const targetPosition = computed(() => getResumeJobField(currentData.value, "position"));
 const examples = ref([]);
 const recommendedHot = ref(false);
 const isLoading = ref(false);

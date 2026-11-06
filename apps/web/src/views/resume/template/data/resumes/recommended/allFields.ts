@@ -8,7 +8,6 @@ const resumeData: any = {
       ui: {},
       data: {
         name: "PM 羊",
-        position: "高级产品经理",
         birthday: "1996.06",
         sex: "男",
         marital: "未婚",
@@ -24,20 +23,26 @@ const resumeData: any = {
         github: "https://github.com/liran-pm",
         linkedin: "https://www.linkedin.com/in/liran-pm",
         website: "https://portfolio.example.com/li-ran",
-        status: "在职看机会",
-        arrivalTime: "一个月内到岗",
         political: "中共党员",
-        city: "上海",
         nativePlace: "江苏南京",
         sourcePlace: "江苏南京",
         currentCity: "上海",
-        salary: "30k-40k",
         heightWeight: { height: "178", weight: "70" },
         measurements: { bust: "96", waist: "78", hip: "94" },
         sizes: { top: "L", bottom: "32", shoes: "42" },
         avatar: xiaoyang,
         logo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='210' height='210' viewBox='0 0 210 210'%3E%3Ccircle cx='105' cy='105' r='98' fill='white' stroke='%23245278' stroke-width='8'/%3E%3Cpath d='M45 85L105 50L165 85L105 120Z' fill='%23245278'/%3E%3Cpath d='M65 105V140Q105 170 145 140V105' fill='none' stroke='%23245278' stroke-width='10'/%3E%3C/svg%3E", // 个人信息校徽图片示例。
       },
+    },
+    jobIntent: {
+      ui: {}, // 求职意向模块及字段展示设置。
+      data: {
+        position: "高级产品经理", // 求职岗位。
+        status: "在职看机会", // 当前求职状态。
+        arrivalTime: "一个月内到岗", // 预计到岗时间。
+        city: "上海", // 期望工作城市。
+        salary: "30k-40k", // 期望薪资范围。
+      }, // 求职意向字段示例。
     },
     account: {
       ui: { collapsed: ["1"]},
@@ -303,6 +308,7 @@ const resumeData: any = {
   config: {
     modules: [
       { key: "user" },
+      { key: "jobIntent" /* 求职意向独立展示。 */ },
       { key: "account" },
       { key: "education" },
       { key: "skill" },

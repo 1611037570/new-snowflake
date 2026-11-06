@@ -20,6 +20,8 @@ export const useResumeAssistant = () => {
   const { isGenerating } = storeToRefs(resumeStore);
   const { createDefaultChat, createDefaultMessage } = aiStore;
   const resumeContext = useResumeContext();
+  // 完整模块清单只用于判断字段归属，内容读取仍遵守本次选区。
+  const getResumeModuleKeys = () => (resumeStore.runtimeFields || []).map((field: any) => field.key);
 
   const updateCurrentLang = (language: string): boolean => {
     const ui = resumeStore.currentUI;
@@ -45,9 +47,10 @@ export const useResumeAssistant = () => {
       taskProfile,
       tools: [
         // 参考知识通过单一工具按需读取，任务能力由首轮任务契约直接返回正文。
-        createSkillReferenceTool(referenceSkills),
+        createSkillReferenceTool(referenceSkills, getResumeModuleKeys),
         ...createResumeTools({
           getResumeData: resumeContext.getResumeData,
+          getResumeModuleKeys, // 即使只选择个人信息，也能识别已存在的求职意向。
           allowModuleTitleEdit: taskProfile?.allowModuleTitleEdit !== false,
           applyResumeOperations: (operations) => {
             return resumeStore.applyResumeOperations(operations, observe);

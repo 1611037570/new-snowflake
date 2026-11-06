@@ -1,5 +1,5 @@
 import { resumeIndustryKnowledge } from "@snowflake/resume-core";
-import type { Skill, SkillLoader, SkillRegistration, SkillRole } from "../types";
+import type { Skill, SkillLoadContext, SkillLoader, SkillRegistration, SkillRole } from "../types";
 
 // 统一生成轻量注册项，技能正文只保留在各自模块中。
 const registerSkill = (
@@ -8,7 +8,7 @@ const registerSkill = (
   name: string,
   description: string,
   load: SkillLoader,
-  loadVariant?: (key: string) => Promise<Skill>,
+  loadVariant?: (key: string, context?: SkillLoadContext) => Promise<Skill>,
 ): SkillRegistration => ({ id, role, name, description, load, loadVariant });
 
 // 简历智能体的完整按需能力目录；这里只保存规划所需摘要和正文加载入口。
@@ -18,10 +18,10 @@ export const resumeSkillRegistry: SkillRegistration[] = [
     "reference",
     "简历数据规范",
     "本技能提供由当前简历表单结构自动生成的数据契约。当 AI 需要了解模块、字段、可添加字段、枚举值与时间或富文本格式时必须加载；不得臆造未声明字段。",
-    () => import("./skill_resume_data_contract").then((module) => module.resumeDataContract()),
+    (context) => import("./skill_resume_data_contract").then((module) => module.resumeDataContract({ moduleKeys: context?.moduleKeys })),
     // 数据规范支持按模块读取，只注入目标模块的字段契约
-    (moduleKey: string) =>
-      import("./skill_resume_data_contract").then((module) => module.resumeDataContract({ module: moduleKey })),
+    (moduleKey: string, context) =>
+      import("./skill_resume_data_contract").then((module) => module.resumeDataContract({ module: moduleKey, moduleKeys: context?.moduleKeys })),
   ),
   registerSkill(
     "resume_writing",

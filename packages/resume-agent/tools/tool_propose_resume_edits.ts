@@ -84,7 +84,7 @@ export const createProposeResumeEditsTool = (ctx: ResumeToolContext): ResumeAgen
     const operations = normalizeResumeEdits(submittedOperations, dataView);
     // 空操作或缺失参数不能被当成合法写入结果
     const validationIssues = operations.length
-      ? getResumeEditValidationIssues(operations, dataView)
+      ? getResumeEditValidationIssues(operations, dataView, ctx.getResumeModuleKeys?.())
       : [{ operationIndex: null, code: "INVALID_OPERATION", message: "operations 必须是非空的写操作数组" }];
     // 按钮入口的内容调整不能借模块标题承载岗位说明，违规操作由模型移除后重提。
     if (ctx.allowModuleTitleEdit === false) {

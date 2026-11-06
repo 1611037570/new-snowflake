@@ -1,7 +1,7 @@
 import { richTextToPlainText } from "@snowflake/resume-core";
 
 // 身份信息、标语和界面状态不构成内容优化的输入，不能因此启动收费请求。
-const EXCLUDED_MODULES = new Set(["user", "account", "slogan"]);
+const EXCLUDED_MODULES = new Set(["user", "jobIntent", "account", "slogan"]); // 求职意向不作为可优化经历。
 const EXCLUDED_FIELDS = new Set(["id", "ui", "hidden", "collapsed", "icon"]);
 const hasContent = (value: unknown): boolean => {
   if (typeof value === "string") {

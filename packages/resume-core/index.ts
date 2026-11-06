@@ -6,6 +6,7 @@ export type { ResumeMediaField } from "./schema/resumeMedia";
 export * from "./format/normalizeRichText";
 export * from "./format/richTextSanitize";
 export * from "./privacy";
+export * from "./jobIntent";
 export { createResumeSnapshot } from "./snapshot";
 export type { ResumeSnapshot, ResumeSnapshotModule, ResumeSnapshotOptions, ResumeSnapshotSource } from "./snapshot";
 export { resumeIndustryKnowledge } from "./knowledge";

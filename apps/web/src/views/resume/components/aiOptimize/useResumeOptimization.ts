@@ -119,6 +119,7 @@ export const useResumeOptimization = () => {
         contextCompaction: resumeContextCompaction, // 与通用助手采用相同的长上下文预算。
         context: {
           getResumeData: context.getResumeData, // 复用媒体裁剪和冻结的脱敏设置。
+          getResumeModuleKeys: () => (draft.value?.config?.modules || []).map((module: any) => module.key), // 本轮副本的完整模块清单。
           applyResumeOperations: (operations) => {
             const beforeBatch = JSON.parse(JSON.stringify(draft.value.data));
             batchChanges = [];

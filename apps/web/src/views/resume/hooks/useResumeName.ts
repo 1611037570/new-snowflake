@@ -1,3 +1,5 @@
+import { getResumeJobField } from "@snowflake/resume-core";
+// 求职方向跟随独立模块或个人信息的实际数据。
 /**
  * 简历命名相关工具：工作年限、简历标题、导出文件名
  */
@@ -26,7 +28,7 @@ export const useResumeName = () => {
     const { user, education } = resumeItem.data || {};
     const name = user?.data?.name || "";
     const edu = education?.list?.[0]?.data?.education || "";
-    const position = user?.data?.position || "";
+    const position = getResumeJobField(resumeItem.data, "position");
     // 取整口径跟随个人信息的展示形态：默认实际整年，选四舍五入才计入未满一年的月份
     const years = calcWorkYears(user?.data?.workTime, {
       round: user?.ui?.workTime?.display === "round",

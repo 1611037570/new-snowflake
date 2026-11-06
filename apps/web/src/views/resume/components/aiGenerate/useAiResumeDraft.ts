@@ -123,7 +123,10 @@ export const useAiResumeDraft = () => {
       generated.data.user ||= { data: {} };
       generated.data.user.data ||= {};
       generated.data.user.data.name = knownName.value || supplementedName || "XX";
-      generated.data.user.data.position = input.position;
+      // 求职岗位写入当前实际所属模块，避免独立求职意向与个人信息重复。
+      const jobModule = generated.data.jobIntent || generated.data.user;
+      jobModule.data ||= {};
+      jobModule.data.position = input.position;
       generationWarnings.value = generated.warnings;
       // 三项输入驱动整份草稿，保留模型实际生成的全部合法模块。
       const source = JSON.parse(JSON.stringify(sourceItem.value || {}));

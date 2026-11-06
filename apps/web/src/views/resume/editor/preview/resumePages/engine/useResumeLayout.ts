@@ -63,6 +63,7 @@ export const useResumeLayout = ({
       moduleKeys: moduleKeys.value,
       data: data.value,
       ui: ui.value,
+      config: { fields: allModules.value /* 展开后的字段顺序供正文适配器读取。 */ }, // 测量与预览共用当前模块配置。
     }).map((node) => node.contentKind === "user"
       ? { ...node, splitMode: userSplitMode.value } // 组件分片能力与渲染共用解析入口
       : node);
@@ -180,6 +181,7 @@ export const useResumeLayout = ({
     theme: ui.value.theme,
     content: ui.value.content,
     user: ui.value.user,
+    jobIntent: ui.value.jobIntent, // 标签模式变化时重新测量求职意向。
     layout: ui.value.layout,
     renderSignature: renderSignature.value,
     fontReadyVersion: fontReadyVersion.value,

@@ -4,6 +4,8 @@ import type { ResumeOperationResult, ResumeWriteOp } from "./resumeOperations";
 export interface ResumeToolContext {
   // 读取当前简历数据（跟随 AI 助手当前选中的模块）
   getResumeData: () => unknown;
+  // 当前简历的完整模块标识，用于判断字段归属，不扩大本次读写范围。
+  getResumeModuleKeys?: () => string[];
   // 批量执行已经校验通过的语义化写操作
   applyResumeOperations: (operations: ResumeWriteOp[]) => ResumeOperationResult;
   // 读取写入后的完成度与时间线问题，用于确认一键调整是否闭环

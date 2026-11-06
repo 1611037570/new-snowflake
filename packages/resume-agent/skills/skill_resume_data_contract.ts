@@ -6,6 +6,7 @@ import type {
   ResumeModuleVariantSchema,
 } from "@snowflake/resume-core/schema/resumeSchema";
 import { RESUME_SCHEMA } from "@snowflake/resume-core/schema/resumeSchemaRegistry";
+import { resolveResumeSchemaForModules } from "@snowflake/resume-core";
 
 const DESCRIPTION =
   "本技能提供由当前简历表单结构自动生成的数据契约。当 AI 需要了解模块、字段、可添加字段、枚举值与时间或富文本格式时必须加载；不得臆造未声明字段。";
@@ -91,6 +92,7 @@ const STRUCTURE_NOTES = `- 对象模块通过 \`updateModule\` 修改字段。
 - 数组模块通过 \`updateRecord\`、\`addRecord\`、\`deleteRecord\`、\`moveRecord\` 修改记录。
 - 同一模块存在多种数据形态时，\`read_resume_data\` 只返回当前界面布局生效的形态；必须按本次返回的对象或数组选择写操作，不得读取或修改未生效形态。
 - 字段标记为“可添加字段”时，即使当前数据缺失，也允许 \`updateModule\` 首次写入。
+- 字段只在当前契约声明的所属模块中读写，不得在其他模块重复添加；模块结构变化后应重新读取字段契约。
 - 修改现有简历时，当前数据可能只包含模块清单的一部分，不得写入当前数据中不存在的模块；生成新草稿时按入口目标创建相关模块，未提供的具体经历信息使用 XX 占位，不得写成已核实事实。`;
 
 const FORMAT_RULES = `# 强制格式
@@ -103,15 +105,15 @@ const STRUCTURE_INTRO =
   "\`read_resume_data\` 返回以稳定模块 key 为键的对象，每个模块均为 \`{ title, data }\`。\`title\`只用于展示，写操作必须使用模块 key。";
 
 // 完整契约：列出全部模块与字段，供需要跨模块判断或一次性生成草稿的场景使用
-const buildFullInstructions = () => {
-  const moduleRows = RESUME_SCHEMA.map(
+const buildFullInstructions = (schema: ResumeModuleSchema[]) => {
+  const moduleRows = schema.map(
     (module) => {
       const variants = module.variants?.length ? module.variants : [module];
       const kinds = variants.map((variant) => KIND_LABELS[variant.kind]).join(" / ");
       return `| \`${module.key}\` | ${module.title} | ${kinds} |`;
     },
   ).join("\n");
-  const modules = RESUME_SCHEMA.map(renderModule).join("\n\n");
+  const modules = schema.map(renderModule).join("\n\n");
 
   return `# 简历数据总体结构
 
@@ -132,7 +134,7 @@ ${FORMAT_RULES}`;
 
 // 单模块契约：只渲染目标模块的字段，公开写入单模块时按需读取
 const buildModuleInstructions = (module: ResumeModuleSchema) => {
-  const index = RESUME_SCHEMA.indexOf(module);
+  const index = RESUME_SCHEMA.findIndex((item) => item.key === module.key);
   return `# 简历数据总体结构
 
 ${STRUCTURE_INTRO}
@@ -149,19 +151,23 @@ ${FORMAT_RULES}`;
 export type ResumeDataContractOptions = {
   // 只返回该模块的字段契约；省略时返回全部模块。
   module?: string;
+  // 当前简历完整模块清单，用于移除已迁出的个人信息字段。
+  moduleKeys?: string[];
 };
 
 // 数据规范直接由表单领域结构生成，字段调整后无需维护第二份静态表格
 const buildInstructions = (options: ResumeDataContractOptions = {}) => {
+  // 只派生本次契约，保持全局注册表不变，生成与导入仍可读取完整定义。
+  const schema = options.moduleKeys ? resolveResumeSchemaForModules(RESUME_SCHEMA, options.moduleKeys) : RESUME_SCHEMA;
   const moduleKey = options.module?.trim();
   if (moduleKey) {
     // 自定义模块的实际 key 以 custom_ 开头，统一按注册的 custom 模块解析
     const target = moduleKey.startsWith("custom_")
-      ? RESUME_SCHEMA.find((module) => module.key === "custom")
-      : RESUME_SCHEMA.find((module) => module.key === moduleKey);
+      ? schema.find((module) => module.key === "custom")
+      : schema.find((module) => module.key === moduleKey);
     if (target) return buildModuleInstructions(target);
   }
-  return buildFullInstructions();
+  return buildFullInstructions(schema);
 };
 
 export const resumeDataContract = (options?: ResumeDataContractOptions) => ({

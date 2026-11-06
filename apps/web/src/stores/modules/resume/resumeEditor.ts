@@ -20,6 +20,7 @@ import { isEqual } from "lodash-es";
 import { executeResumeOperations, type ResumeWriteOp, type ResumeOperationObserver } from "./resumeOperations";
 import i18n from "@/locales";
 import { compactResumeUi, resolveResumeUi } from "@/domain/resume/theme/resumeUi";
+import { moveToJobIntent, moveFromJobIntent } from "./hooks/useJobIntent";
 
 type ResumeEditorOptions = {
   currentItem: ComputedRef<any>;
@@ -79,6 +80,8 @@ export const createResumeEditor = ({
     const item = currentItem.value;
     const fields = runtimeConfig.value?.fields;
     if (!item || !fields || fields.some((field: any) => field?.key === moduleKey)) return false;
+    // 添加独立模块前迁移已有求职资料。
+    if (moduleKey === "jobIntent") moveToJobIntent(item);
     setConfigModules(item, [...compactConfigModules(fields), { key: moduleKey }]);
     refreshRuntime();
     return true;
@@ -223,6 +226,16 @@ export const createResumeEditor = ({
     const fields = runtimeConfig.value?.fields;
     const index = fields?.findIndex((field: any) => field?.key === moduleKey) ?? -1;
     if (index < 0) return false;
+    // 删除求职意向时先回迁内容，并按最新模块结构恢复个人字段。
+    if (moduleKey === "jobIntent") {
+      const modules = compactConfigModules(fields).filter((field: any) => field.key !== moduleKey);
+      moveFromJobIntent(currentItem.value, modules);
+      delete currentData.value.jobIntent;
+      setConfigModules(currentItem.value, modules);
+      unselectModule(moduleKey);
+      refreshRuntime();
+      return true;
+    }
     fields.splice(index, 1);
     if (currentData.value) delete currentData.value[moduleKey];
     unselectModule(moduleKey);

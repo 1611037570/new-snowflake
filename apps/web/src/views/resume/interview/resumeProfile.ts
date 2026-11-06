@@ -1,3 +1,5 @@
+import { getResumeJobField } from "@snowflake/resume-core";
+// 求职方向跟随独立模块或个人信息的实际数据。
 import { calcWorkYears } from "@/domain/resume/workYears";
 
 export interface InterviewResumeProfile {
@@ -11,7 +13,7 @@ export const readInterviewResumeProfile = (resume: any): InterviewResumeProfile 
   const workTime = user?.data?.workTime;
   const years = calcWorkYears(workTime, { round: user?.ui?.workTime?.display === "round" /* 沿用简历配置的年限取整方式。 */ });
   return {
-    position: typeof user?.data?.position === "string" ? user.data.position.trim() : "", // 只读取已填写的求职方向。
+    position: getResumeJobField(resume?.data, "position").trim(), // 只读取已填写的求职方向。
     experienceYears: workTime ? years > 0 ? `${years} 年` : "1 年以下" : "", // 没有参加工作时间时留空，避免猜测应届身份。
   };
 };

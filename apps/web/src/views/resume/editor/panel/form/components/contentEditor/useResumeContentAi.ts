@@ -1,3 +1,5 @@
+import { getResumeJobField } from "@snowflake/resume-core";
+// 求职方向跟随独立模块或个人信息的实际数据。
 import { onBeforeUnmount, ref, watch, type Ref } from "vue";
 import { ElMessage } from "element-plus";
 import { isAbortError } from "@/apis";
@@ -90,7 +92,7 @@ export const useResumeContentAi = (
   const runAiContent = async (action: ContentAiAction, count = 1) => {
     if (loading.value || !ensureAiAvailable()) return;
     // 求职岗位决定写作方向，缺失时先让用户补全
-    const position = String(resumeStore.currentItem?.data?.user?.data?.position ?? "").trim();
+    const position = getResumeJobField(resumeStore.currentItem?.data, "position").trim();
     if (!position) {
       ElMessage.warning("请先在个人信息中填写求职岗位，否则无法判断写作方向");
       return;

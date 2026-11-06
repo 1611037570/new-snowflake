@@ -1,3 +1,5 @@
+import { getResumeFieldOwner } from "../jobIntent";
+
 export type ResumeModuleKind = "object" | "array" | "custom";
 export type ResumeFieldValueType = "string" | "number" | "array" | "object" | "unknown";
 export type ResumeFieldFormat = "month" | "html" | "heightWeight";
@@ -53,6 +55,24 @@ export type ResumeModuleSchema = ResumeModuleVariantSchema & {
   // 同一模块可切换的数据形态。
   variants?: ResumeModuleVariantSchema[];
 };
+
+// 按实际模块归属派生可用字段，各宿主不再重复处理对象与列表形态。
+export const resolveResumeSchemaForModules = (
+  schema: ResumeModuleSchema[],
+  moduleKeys: readonly string[],
+): ResumeModuleSchema[] => schema.map((module) => {
+  const availableFields = (fields: ResumeFieldSchema[]) => fields.filter((field) =>
+    getResumeFieldOwner(module.key, field.key, moduleKeys) === module.key,
+  );
+  return {
+    ...module,
+    fields: availableFields(module.fields), // 当前模块可使用的字段。
+    variants: module.variants?.map((variant) => ({
+      ...variant,
+      fields: availableFields(variant.fields), // 当前数据形态可使用的字段。
+    })), // 同一归属规则覆盖全部形态。
+  };
+});
 
 export const getResumeModuleSchema = (
   schema: ResumeModuleSchema[],

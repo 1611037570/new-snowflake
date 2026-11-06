@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { getResumeJobField } from "@snowflake/resume-core";
+// 求职方向跟随独立模块或个人信息的实际数据。
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useElementSize } from "@vueuse/core";
 import { useRouter } from "vue-router";
@@ -64,7 +66,7 @@ const initialize = async () => {
     const resume = await store.loadResume(props.resumeId);
     if (!resume) throw new Error("简历已不存在，请重新选择");
     resumeTitle.value = getResumeTitle(resume);
-    input.position = props.initialInput?.position || resume.data?.user?.data?.position?.trim() || "";
+    input.position = props.initialInput?.position || getResumeJobField(resume.data, "position").trim();
     if (props.initialInput) {
       input.jd = props.initialInput.jd;
       input.focus = props.initialInput.focus;

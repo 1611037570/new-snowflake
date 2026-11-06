@@ -358,6 +358,9 @@ export const DEFAULT_UI = {
     avatar: { ...DEFAULT_AVATAR_APPEARANCE }, // 头像外观默认跟随主题，用户调整后写入覆盖值
     logo: { ...DEFAULT_SCHOOL_LOGO_APPEARANCE }, // 校徽大小与裁切比例随简历保存
   },
+  jobIntent: { // 求职意向独立展示设置。
+    infoMode: "text" as const, // 默认显示文字标签。
+  },
   skill: {
     layout: "text", // 默认使用富文本正文布局
     columns: 1, // 熟练度列表默认单栏

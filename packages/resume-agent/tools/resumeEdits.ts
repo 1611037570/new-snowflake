@@ -3,6 +3,7 @@ import type { ResumeFieldSchema } from "@snowflake/resume-core/schema/resumeSche
 import { findResumeModuleSchema } from "@snowflake/resume-core/schema/resumeSchemaRegistry";
 import type { ResumeWriteOp } from "./resumeOperations";
 import { normalizeRichTextHtml } from "@snowflake/resume-core/format/normalizeRichText";
+import { getResumeFieldOwner } from "@snowflake/resume-core";
 
 export type ResumeEditValidationIssue = {
   // 原始写操作下标，从零开始；无法定位时为空
@@ -150,6 +151,7 @@ export const normalizeResumeEdits = (
 export const validateResumeEdits = (
   operations: ResumeWriteOp[],
   dataView: Record<string, { title?: string; data: unknown }>,
+  moduleKeys: readonly string[] = Object.keys(dataView ?? {}), // 完整模块清单用于判断字段归属。
 ): string[] => {
   const errors: string[] = [];
   // 按执行顺序模拟记录变化，整批校验完成前不修改真实数据
@@ -178,6 +180,15 @@ export const validateResumeEdits = (
     if (typeof op.module !== "string" || !Object.prototype.hasOwnProperty.call(workingView, op.module) || !moduleView) {
       errors.push(`${order}：模块 ${op.module} 不存在于当前简历`);
       return;
+    }
+    // 写入前使用公共归属规则定位目标，不在工具中维护具体模块名称。
+    if ((op.op === "updateModule" || op.op === "updateRecord") && typeof op.field === "string") {
+      const owner = getResumeFieldOwner(op.module, op.field, moduleKeys);
+      if (owner !== op.module) {
+        const title = findResumeModuleSchema(owner)?.title || owner;
+        errors.push(`${order}：模块 ${op.module} 不存在字段 ${op.field}，该字段已归属${title} ${owner}；请读取目标模块后修改`);
+        return;
+      }
     }
     // 禁止写入隐私标记，也不允许通过猜测内容替换受保护的字段
     const submittedValue = op.op === "updateModuleTitle" ? op.title
@@ -338,8 +349,9 @@ export const validateResumeEdits = (
 export const getResumeEditValidationIssues = (
   operations: ResumeWriteOp[],
   dataView: Record<string, { title?: string; data: unknown }>,
+  moduleKeys?: readonly string[], // 当前简历完整模块清单。
 ): ResumeEditValidationIssue[] =>
-  validateResumeEdits(operations, dataView).map((message) => {
+  validateResumeEdits(operations, dataView, moduleKeys).map((message) => {
     const order = message.match(/^第 (\d+) 条操作/);
     const code = /不支持的操作类型|格式无效|必须提供/.test(message)
       ? "INVALID_OPERATION"

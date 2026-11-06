@@ -6,6 +6,7 @@ import type {
   ModelBinding,
   ObjectFormField,
 } from "@/components/business/dynamicForm/api";
+import { JOB_INTENT_FIELDS } from "@snowflake/resume-core";
 
 // 展开状态数组：对应 SfCollapseItem 的激活 name，表示折叠容器为展开态
 export const EXPANDED = ["1"];
@@ -2887,7 +2888,39 @@ export const DEFAULT_CONFIG = {
   // 表单中所渲染的组件的字段
   fields: [],
 } satisfies FormConfig;
+// 求职意向复用个人字段定义，独立模块内直接展示五项输入。
+const jobIntentSource = (DEFAULT_USER_FORM[0] as GroupFormField).fields.find((field) => field.key === "more") as GroupFormField;
+const jobIntentFields = jobIntentSource.fields
+  .filter((field) => JOB_INTENT_FIELDS.includes(field.key as typeof JOB_INTENT_FIELDS[number]))
+  .map((source) => {
+    const field = structuredClone(source) as GroupFormField;
+    delete field.addable;
+    delete field.defaultAdded;
+    field.colClass = DEFAULT_COL_CLASS + " py-1 px-3!"; // 独立字段沿用个人信息的卡片外观。
+    field.props = { ...field.props, removable: false, draggable: true }; // 显示字段拖拽手柄，不提供删除与置顶操作。
+    field.fields.forEach((child) => {
+      delete child.addable;
+      delete child.defaultAdded;
+    });
+    return field;
+  });
+
+const DEFAULT_JOB_INTENT_FORM: GroupFormField = {
+  type: "group", // 独立对象模块。
+  component: "collapseModule", // 复用模块折叠、隐藏与删除入口。
+  key: "jobIntent", // 求职意向模块标识。
+  context: ["jobIntent"], // 字段绑定到求职意向数据。
+  drag: true, // 支持调整求职字段顺序。
+  dragClass: DEFAULT_DRAG_CLASS, // 模块拖拽手柄。
+  rowClass: "gap-y-3 px-3 pt-3", // 与个人字段共用留白。
+  props: { add: false /* 对象模块无需添加记录。 */ }, // 模块操作配置。
+  model: createModuleState("求职意向"), // 模块标题、折叠与隐藏状态。
+  slot: "default", // 字段内容插槽。
+  fields: jobIntentFields, // 复用现有五个求职字段。
+};
+
 export const allConfig = {
+  jobIntent: DEFAULT_JOB_INTENT_FORM, // 独立求职意向模块。
   skill: DEFAULT_SKILL_FORM,
   user: DEFAULT_USER_FORM,
   advantage: DEFAULT_ADVANTAGE_FORM,

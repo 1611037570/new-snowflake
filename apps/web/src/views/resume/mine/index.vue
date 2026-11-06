@@ -1,4 +1,6 @@
 <script setup>
+import { getResumeJobField } from "@snowflake/resume-core";
+// 求职方向跟随独立模块或个人信息的实际数据。
 import { normalizeResumeTags } from "@/domain/resume/resumeTags";
 import ResumeTagsModal from "../components/resumeTagsModal.vue";
 import { compactResumeItem } from "@/domain/resume/theme/resumeUi";
@@ -62,10 +64,10 @@ const getLastUseTime = (item) => {
   return item?.usage?.lastUseTime ? dayjs(item.usage.lastUseTime).format("YYYY.MM.DD HH:mm") : "--";
 };
 const getResumePosition = (item) => {
-  return item?.data?.user?.data?.position || $t("resumeMinePositionEmpty");
+  return getResumeJobField(item?.data, "position") || $t("resumeMinePositionEmpty");
 };
 // 岗位为空时用中性样式展示占位文案，避免和真实岗位的标签混淆
-const hasResumePosition = (item) => Boolean(item?.data?.user?.data?.position);
+const hasResumePosition = (item) => Boolean(getResumeJobField(item?.data, "position"));
 
 // 导出指定简历的完整 JSON 配置，支持后续无损导入恢复。
 const exportJson = (item) => {

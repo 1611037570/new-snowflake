@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { getResumeJobField } from "@snowflake/resume-core";
+// 求职方向跟随独立模块或个人信息的实际数据。
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { onBeforeRouteLeave, useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
@@ -60,7 +62,7 @@ const initialize = async () => {
   finally { loading.value = false; }
 };
 onMounted(initialize);
-watch(selectedId, () => { input.position = selectedResume.value?.data?.user?.data?.position?.trim() || ""; });
+watch(selectedId, () => { input.position = getResumeJobField(selectedResume.value?.data, "position").trim(); });
 // 修改资料只清除当前提示，不触发任何额外分析请求。
 watch([selectedId, () => input.position, () => input.company, () => input.jd, sourceFingerprint], () => { error.value = ""; });
 
