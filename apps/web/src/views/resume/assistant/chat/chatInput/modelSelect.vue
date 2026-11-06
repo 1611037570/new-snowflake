@@ -66,11 +66,10 @@ function goToAddModel() {
     <span>未配置模型</span>
   </div>
   <div class="flex items-center gap-1" v-else>
-    <ThinkMode />
-    <!-- 模型切换：普通 div 触发，SfDropdown + SfList 渲染模型列表 -->
+    <!-- 模型选择置于深度思考之前，并增加名称的最大显示宽度。 -->
     <SfDropdown ref="dropdownRef" trigger="click" placement="top" :show-arrow="false">
       <div
-        class="flex-c max-w-24 cursor-pointer gap-0.5 overflow-hidden rounded-3xl px-2 py-1.5 text-[12px] font-semibold select-none hover:bg-sf-bg-2"
+        class="flex-c max-w-48 cursor-pointer gap-0.5 overflow-hidden rounded-3xl px-2 py-1.5 text-[12px] font-semibold select-none hover:bg-sf-bg-2"
       >
         <div class="flex-1 truncate">
           {{ activeName }}
@@ -94,5 +93,6 @@ function goToAddModel() {
         </SfList>
       </template>
     </SfDropdown>
+    <ThinkMode />
   </div>
 </template>

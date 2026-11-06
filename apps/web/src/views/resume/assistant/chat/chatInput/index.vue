@@ -141,6 +141,11 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* 输入区透出外层主题底色，避免组件默认背景形成白色条带。 */
+:deep(.ai-input .el-textarea__inner) {
+  background-color: transparent;
+}
+
 :deep(.ai-input .el-textarea__inner::placeholder) {
   color: var(--color-sf-text-3);
 }
