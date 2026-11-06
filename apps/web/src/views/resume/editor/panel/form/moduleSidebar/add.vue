@@ -16,9 +16,9 @@ const resumeStore = useResumeStore();
 const { runtimeConfig, currentData } = storeToRefs(resumeStore);
 defineOptions({ name: "AddModule" });
 
-// 常用顺序与添加权限统一读取模块登记，避免在入口重复维护名单。
+// 常用顺序与添加权限统一读取模块登记，过滤后直接按已声明顺序排序。
 const BASIC_MODULE_KEYS = RESUME_MODULES.filter((module) => module.addable !== false && module.basicOrder !== undefined)
-  .sort((left, right) => left.basicOrder! - right.basicOrder!)
+  .sort((left, right) => left.basicOrder - right.basicOrder)
   .map((module) => module.key);
 
 // 预设模块列表沿用登记顺序，固定模块与自定义入口不在此重复展示。
@@ -117,7 +117,7 @@ const handleConfirm = () => {
 </script>
 
 <template>
-  <!-- 入口高度随内容撑开，间距统一由侧栏容器控制。 -->
+  <!-- 添加入口使用主文字色，间距统一由侧栏容器控制。 -->
   <div class="w-full">
     <SfDropdown
       class="w-full"
@@ -128,7 +128,7 @@ const handleConfirm = () => {
     >
       <button
         type="button"
-        class="rail-action flex h-8 w-full cursor-pointer items-center justify-center gap-1.5 rounded-3xl p-1 text-[12px] text-sf-text-2 transition-colors select-none hover:bg-sf-bg"
+        class="rail-action flex h-8 w-full cursor-pointer items-center justify-center gap-1.5 rounded-3xl p-1 text-[12px] text-sf-text transition-colors select-none hover:bg-sf-bg"
       >
         <SfIcon icon="ic:round-add" size="4" />
         <span class="max-md:hidden">{{ $t("addModule") }}</span>

@@ -117,7 +117,7 @@ onUnmounted(() => {
     <!-- 完成度：固定在模块列表上方，随简历内容实时更新 -->
     <ModuleProgress />
     <SfScrollbar class="module-list-scroll min-h-0 min-w-0 flex-1">
-      <!-- 模块行固定高度，名称最多显示六个字 -->
+      <!-- 模块行固定高度，名称最多显示六个字，正常状态使用主文字色 -->
       <div ref="listRef" class="flex min-h-full shrink-0 flex-col gap-1.5">
         <div
           v-for="item in draggableItems"
@@ -129,7 +129,7 @@ onUnmounted(() => {
               ? 'bg-sf-theme-3 text-sf-theme'
               : item.hidden
                 ? 'text-sf-text-3'
-                : 'text-sf-text-2 hover:bg-sf-bg'
+                : 'text-sf-text hover:bg-sf-bg'
           "
           @click="handleModuleJump(item.key)"
         >
@@ -173,12 +173,12 @@ onUnmounted(() => {
         </div>
       </div>
     </SfScrollbar>
-    <!-- 底部操作与模块行保持同一视觉规格 -->
+    <!-- 底部操作与模块行、寄语统一使用主文字色 -->
     <div class="flex shrink-0 flex-col gap-1.5 border-t border-sf-b pt-1.5">
       <button
         v-if="system.moreOperationsExpanded"
         type="button"
-        class="rail-action flex h-8 w-full cursor-pointer items-center justify-center gap-1.5 rounded-3xl p-1 text-[12px] text-sf-text-2 transition-colors select-none hover:bg-sf-bg"
+        class="rail-action flex h-8 w-full cursor-pointer items-center justify-center gap-1.5 rounded-3xl p-1 text-[12px] text-sf-text transition-colors select-none hover:bg-sf-bg"
         aria-expanded="true"
         @click="system.moreOperationsExpanded = false"
       >
@@ -188,7 +188,7 @@ onUnmounted(() => {
       <button
         v-else
         type="button"
-        class="rail-action flex h-8 w-full cursor-pointer items-center justify-center gap-1.5 rounded-3xl p-1 text-[12px] text-sf-text-2 transition-colors select-none hover:bg-sf-bg"
+        class="rail-action flex h-8 w-full cursor-pointer items-center justify-center gap-1.5 rounded-3xl p-1 text-[12px] text-sf-text transition-colors select-none hover:bg-sf-bg"
         aria-expanded="false"
         @click="system.moreOperationsExpanded = true"
       >
@@ -207,7 +207,7 @@ onUnmounted(() => {
       >
         <button
           type="button"
-          class="rail-action flex h-8 w-full cursor-pointer items-center justify-center gap-1.5 rounded-3xl p-1 text-[12px] text-sf-text-2 transition-colors select-none hover:bg-sf-bg"
+          class="rail-action flex h-8 w-full cursor-pointer items-center justify-center gap-1.5 rounded-3xl p-1 text-[12px] text-sf-text transition-colors select-none hover:bg-sf-bg"
           aria-haspopup="menu"
         >
           <SfIcon icon="mdi:dots-horizontal" size="4" />
@@ -221,9 +221,9 @@ onUnmounted(() => {
       </SfDropdown>
       <AddModule />
     </div>
-    <!-- 收尾文案：沿用简历首页的同一句寄语，置于模块树最下方；窄屏栏宽只放得下图标，文案隐藏 -->
+    <!-- 收尾文案覆盖共用组件的辅助色，与模块树统一；窄屏隐藏文案 -->
     <ResumeClosing
-      class="max-md:hidden shrink-0 border-t border-sf-b px-1 pt-1.5 text-center text-[11px] leading-4 text-sf-text-3"
+      class="max-md:hidden shrink-0 border-t border-sf-b px-1 pt-1.5 text-center text-[11px] leading-4 text-sf-text!"
     />
   </aside>
 </template>

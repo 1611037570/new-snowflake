@@ -69,12 +69,12 @@ const sortByTime = () => {
 </script>
 
 <template>
-  <!-- 智能排序入口移至模块侧栏，外观与折叠及添加入口保持一致；不再附带文字提示。 -->
+  <!-- 智能排序入口与折叠及添加入口保持一致，统一使用主文字色。 -->
   <button
     type="button"
     @click="sortByTime"
     :disabled="!currentData"
-    class="rail-action flex h-8 w-full cursor-pointer items-center justify-center gap-1.5 rounded-3xl p-1 text-[12px] text-sf-text-2 transition-colors select-none hover:bg-sf-bg"
+    class="rail-action flex h-8 w-full cursor-pointer items-center justify-center gap-1.5 rounded-3xl p-1 text-[12px] text-sf-text transition-colors select-none hover:bg-sf-bg"
   >
     <SfIcon icon="lucide:arrow-down-wide-narrow" size="4" />
     <span class="max-md:hidden">{{ $t("smartSort") }}</span>
