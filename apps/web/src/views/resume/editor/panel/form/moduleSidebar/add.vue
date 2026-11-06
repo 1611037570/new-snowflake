@@ -1,7 +1,7 @@
 <script setup>
 import { useResumeStore } from "@/stores";
 import { allConfig } from "@/stores/modules/resume/config/formConfig";
-import { DEFAULT_MODULE_NAMES } from "@/stores/modules/resume/config/defaultConfig";
+import { RESUME_MODULES } from "@/stores/modules/resume/config/moduleRegistry";
 import {
   bindCollapsedDefault,
   ensureRuntimeFieldIds,
@@ -16,17 +16,16 @@ const resumeStore = useResumeStore();
 const { runtimeConfig, currentData } = storeToRefs(resumeStore);
 defineOptions({ name: "AddModule" });
 
-// 常用模块与一键添加共用此列表，实习经历保留在其他模块中手动添加。
-const BASIC_MODULE_KEYS = ["skill", "education", "project", "work"];
+// 常用顺序与添加权限统一读取模块登记，避免在入口重复维护名单。
+const BASIC_MODULE_KEYS = RESUME_MODULES.filter((module) => module.addable !== false && module.basicOrder !== undefined)
+  .sort((left, right) => left.basicOrder! - right.basicOrder!)
+  .map((module) => module.key);
 
-// 不可手动添加的模块：user 为固定模块，slogan 由主题槽位决定是否渲染
-const EXCLUDED_MODULE_KEYS = ["user", "slogan"];
-
-// 预设模块列表：复用 DEFAULT_MODULE_NAMES 统一维护 key 与名称
+// 预设模块列表沿用登记顺序，固定模块与自定义入口不在此重复展示。
 const presets = computed(() => {
   // 模块名称只做界面翻译，模块 key 仍作为稳定业务标识
   i18n.global.locale.value;
-  return DEFAULT_MODULE_NAMES.filter((item) => !EXCLUDED_MODULE_KEYS.includes(item.key)).map(
+  return RESUME_MODULES.filter((item) => item.addable !== false).map(
     (item) => ({
       name: translateResumeEditorText(item.name),
       value: item.key,

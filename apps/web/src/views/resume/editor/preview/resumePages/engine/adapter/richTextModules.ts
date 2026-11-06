@@ -1,4 +1,5 @@
 import { isContentEmpty, getValidDataEntries } from "@/views/resume/shared/validData";
+import { RESUME_MODULES } from "@/stores/modules/resume/config/moduleRegistry";
 import {
   createModuleTitleNode,
   type LayoutAdapter,
@@ -8,7 +9,7 @@ import {
 import { parseRichText } from "./richTextParser";
 
 /** 当前使用通用富文本模块渲染的模块 key（skill 支持切换熟练度布局，适配器单独注册） */
-export const RICH_TEXT_MODULE_KEYS = ["advantage"] as const;
+export const RICH_TEXT_MODULE_KEYS = RESUME_MODULES.filter((module) => module.preview === "richText").map((module) => module.key);
 
 /** 读取富文本模块中的正文内容 */
 const getModuleContent = (context: LayoutAdapterContext): string => {
@@ -125,5 +126,7 @@ export const registerRichTextModuleAdapters = (registry: LayoutAdapterRegistry) 
     registry.register(moduleKey, createRichTextModuleAdapter(moduleKey));
   });
   // 技能模块支持布局切换，注册双模式适配器
-  registry.register("skill", createSkillModuleAdapter("skill"));
+  RESUME_MODULES.filter((module) => module.preview === "skill").forEach(({ key }) => {
+    registry.register(key, createSkillModuleAdapter(key));
+  });
 };

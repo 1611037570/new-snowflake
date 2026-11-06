@@ -1,9 +1,10 @@
 import { getValidDataEntries, isContentEmpty } from "@/views/resume/shared/validData";
+import { RESUME_MODULES } from "@/stores/modules/resume/config/moduleRegistry";
 import type { LayoutAdapter, LayoutAdapterContext, LayoutAdapterRegistry } from "./index";
 import { parseRichText } from "./richTextParser";
 
 /** 当前使用统一经历列表结构的模块 key */
-export const EXPERIENCE_MODULE_KEYS = ["work", "internship", "project", "education", "club", "volunteer"] as const;
+export const EXPERIENCE_MODULE_KEYS = RESUME_MODULES.filter((module) => module.preview === "experience").map((module) => module.key);
 
 /** 经历模块统一使用详情组件：教育展示学院、专业、学历与学制，其余模块展示职务与部门。 */
 const EXPERIENCE_CONTENT_KIND = "experienceDetails";

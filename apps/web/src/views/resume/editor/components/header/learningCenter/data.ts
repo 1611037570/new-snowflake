@@ -1,4 +1,4 @@
-import { DEFAULT_MODULE_NAMES } from "@/stores/modules/resume/config/defaultConfig";
+import { RESUME_MODULES } from "@/stores/modules/resume/config/moduleRegistry";
 
 export type LearningCategoryKey = "start" | "edit" | "writing" | "layout" | "ai" | "export";
 
@@ -65,7 +65,8 @@ export const LEARNING_ARTICLES: LearningArticle[] = [
   { id: "save", category: "export" },
   { id: "export", category: "export" },
   { id: "privacy", category: "export" },
-  ...[...DEFAULT_MODULE_NAMES.map((module) => module.key), "custom"].map((moduleKey) => ({
+  // 全部已登记模块共用同名帮助文案，自定义模块无需额外追加。
+  ...RESUME_MODULES.map(({ key: moduleKey }) => ({
     id: `writing_${moduleKey}`,
     category: "writing" as const,
     moduleKey,

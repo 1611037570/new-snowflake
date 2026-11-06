@@ -1,14 +1,9 @@
 import { getValidData, getValidDataEntries, isContentEmpty } from "@/views/resume/shared/validData";
+import { RESUME_MODULES, type ResumeModulePreview } from "@/stores/modules/resume/config/moduleRegistry";
 import type { LayoutNode } from "../types";
 import type { LayoutAdapter, LayoutAdapterContext, LayoutAdapterRegistry } from "./index";
 import { createExperienceModuleAdapter } from "./experienceModules";
 import { parseRichText } from "./richTextParser";
-
-/** 需要使用通用条目块结构的模块 key（荣誉已升级为可分片的描述条目） */
-const LIST_MODULE_KEYS = ["account"] as const;
-
-/** 需要使用不可拆分媒体结构的模块 key */
-const MEDIA_MODULE_KEYS = ["portfolio"] as const;
 
 /** 创建个人信息模块适配器 */
 const createUserModuleAdapter = (context: LayoutAdapterContext): LayoutNode[] => {
@@ -176,41 +171,46 @@ const createCustomModuleFallback = (context: LayoutAdapterContext): LayoutNode[]
   return createExperienceModuleAdapter(context.moduleKey)(context);
 };
 
+// 求职意向作为独立正文块参与所有主题的测量、分页与导出。
+const createJobIntentModuleAdapter: LayoutAdapter = (context) => {
+  const module = context.data.jobIntent as { data?: Record<string, unknown> /* 求职字段值。 */, ui?: Record<string, any> /* 字段展示设置。 */ } | undefined;
+  // 字段顺序随节点载荷参与签名，拖拽后同步更新测量与导出。
+  const config = context.config as { fields?: Array<{ key: string /* 模块标识。 */; fields?: Array<{ key?: string /* 字段标识。 */ }> /* 模块字段顺序。 */ }> /* 已展开模块配置。 */ } | undefined;
+  const fieldOrder = config?.fields?.find((field) => field.key === "jobIntent")?.fields?.map((field) => field.key).filter(Boolean) || [];
+  const hasContent = Object.entries(module?.data || {}).some(([key, value]) =>
+    module?.ui?.[key]?.hidden !== true && typeof value === "string" && value.trim(),
+  );
+  return hasContent ? [{
+    id: "jobIntent", // 求职意向正文节点。
+    sourceModuleKey: "jobIntent", // 所属模块标识。
+    type: "group", // 五项资料整体排版。
+    contentKind: "jobIntent", // 使用求职意向内容组件。
+    splitMode: "whole", // 求职资料作为完整信息块分页。
+    payload: { ...module, fieldOrder /* 当前求职字段排列顺序。 */ }, // 字段值、展示设置和顺序共同参与内容变化签名。
+  }] : [];
+};
+
+/** 适配方式与实现的对应关系，不再在这里维护业务模块名单。 */
+const OTHER_MODULE_ADAPTERS: Partial<Record<ResumeModulePreview, (moduleKey: string) => LayoutAdapter>> = {
+  user: () => createUserModuleAdapter, // 个人信息整块适配。
+  jobIntent: () => createJobIntentModuleAdapter, // 求职字段整块适配。
+  slogan: () => createSloganModuleAdapter, // 顶部标语整块适配。
+  list: createListModuleAdapter, // 普通条目列表适配。
+  describedItem: createDescribedItemModuleAdapter, // 带描述正文的条目适配。
+  media: createMediaModuleAdapter, // 不可拆分媒体条目适配。
+};
+
 /** 注册剩余内置模块和自定义模块适配器 */
 export const registerOtherModuleAdapters = (registry: LayoutAdapterRegistry) => {
-  // 求职意向作为独立正文块参与所有主题的测量、分页与导出。
-  registry.register("jobIntent", (context) => {
-    const module = context.data.jobIntent as { data?: Record<string, unknown> /* 求职字段值。 */, ui?: Record<string, any> /* 字段展示设置。 */ } | undefined;
-    // 字段顺序随节点载荷参与签名，拖拽后同步更新测量与导出。
-    const config = context.config as { fields?: Array<{ key: string /* 模块标识。 */; fields?: Array<{ key?: string /* 字段标识。 */ }> /* 模块字段顺序。 */ }> /* 已展开模块配置。 */ } | undefined;
-    const fieldOrder = config?.fields?.find((field) => field.key === "jobIntent")?.fields?.map((field) => field.key).filter(Boolean) || [];
-    const hasContent = Object.entries(module?.data || {}).some(([key, value]) =>
-      module?.ui?.[key]?.hidden !== true && typeof value === "string" && value.trim(),
-    );
-    return hasContent ? [{
-      id: "jobIntent", // 求职意向正文节点。
-      sourceModuleKey: "jobIntent", // 所属模块标识。
-      type: "group", // 五项资料整体排版。
-      contentKind: "jobIntent", // 使用求职意向内容组件。
-      splitMode: "whole", // 求职资料作为完整信息块分页。
-      payload: { ...module, fieldOrder /* 当前求职字段排列顺序。 */ }, // 字段值、展示设置和顺序共同参与内容变化签名。
-    }] : [];
-  });
-  registry.register("user", createUserModuleAdapter, {
-    title: false, // 个人信息组件自行展示姓名
-    paragraphSpacing: false, // 页眉不插入条目段间距
-  });
-  registry.register("slogan", createSloganModuleAdapter, {
-    title: false, // 用户标语没有独立模块标题
-    paragraphSpacing: false, // 标语区域不插入条目段间距
-  });
-  LIST_MODULE_KEYS.forEach((moduleKey) => {
-    registry.register(moduleKey, createListModuleAdapter(moduleKey));
-  });
-  // 荣誉条目带可选描述正文，注册可分片的独立适配器
-  registry.register("honor", createDescribedItemModuleAdapter("honor"));
-  MEDIA_MODULE_KEYS.forEach((moduleKey) => {
-    registry.register(moduleKey, createMediaModuleAdapter(moduleKey));
+  // 登记决定模块使用哪种已有适配器，具体节点转换保持原实现。
+  RESUME_MODULES.forEach(({ key, preview }) => {
+    const createAdapter = OTHER_MODULE_ADAPTERS[preview];
+    if (!createAdapter) return;
+    const header = preview === "user" || preview === "slogan";
+    registry.register(key, createAdapter(key), header ? {
+      title: false, // 页眉内容自行展示标题。
+      paragraphSpacing: false, // 页眉不插入条目段间距。
+    } : undefined);
   });
   registry.registerFallback(createCustomModuleFallback);
 };

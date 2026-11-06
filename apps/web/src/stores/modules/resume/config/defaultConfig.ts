@@ -1,28 +1,11 @@
 import { getUUID } from "@/utils";
 import { defaultThemeTemplate } from "@/domain/resume/theme/uiConfig";
+import { RESUME_MODULES } from "./moduleRegistry";
 
-// 默认模块 key 对应的名称与图标（取自 formConfig，后期自行维护）
-export const DEFAULT_MODULE_NAMES: { key: string; name: string; icon: string }[] = [
-  { key: "user", name: "个人信息", icon: "mdi:account" },
-  { key: "jobIntent", name: "求职意向", icon: "lucide:briefcase" }, // 求职方向与投递条件。
-  { key: "slogan", name: "顶部标语", icon: "lucide:type" },
-  { key: "account", name: "社交账号", icon: "mdi:account-box-outline" },
-  { key: "education", name: "教育经历", icon: "mdi:school-outline" },
-  { key: "skill", name: "专业技能", icon: "mdi:hammer-wrench" },
-  { key: "advantage", name: "个人优势", icon: "fa6-solid:seedling" },
-  { key: "work", name: "工作经历", icon: "lucide:briefcase" },
-  {
-    key: "internship", // 实习经历模块标识。
-    name: "实习经历", // 模块默认名称。
-    icon: "lucide:briefcase", // 实习经历导航图标。
-  },
-  { key: "project", name: "项目经历", icon: "mdi:code-tags" },
-  { key: "club", name: "社团经历", icon: "mdi:account-group-outline" }, // 校园组织经历，结构与工作经历一致
-  { key: "volunteer", name: "志愿服务经历", icon: "mdi:hand-heart-outline" }, // 公益服务经历，结构与工作经历一致
-  { key: "publication", name: "论文发表", icon: "mdi:file-document-multiple-outline" },
-  { key: "honor", name: "荣誉证书", icon: "fa6-solid:award" },
-  { key: "portfolio", name: "作品集", icon: "mdi:widgets" },
-];
+// 保留现有消费入口，名称与图标统一从模块登记派生。
+export const DEFAULT_MODULE_NAMES = RESUME_MODULES.filter((module) => module.key !== "custom").map(
+  ({ key, name, icon }) => ({ key, name, icon }),
+);
 // “整个简历”占位项：无具体模块选中时作为默认操作对象
 export const ALL_MODULE_KEY = "all";
 export const ALL_MODULE_NAME = "整个简历";
@@ -33,7 +16,7 @@ export const ALL_MODULE = {
   icon: ALL_MODULE_ICON,
 };
 // 自定义模块图标：名称由用户输入动态生成，仅图标在此统一维护
-export const CUSTOM_MODULE_ICON = "mdi:puzzle-outline";
+export const CUSTOM_MODULE_ICON = RESUME_MODULES.find((module) => module.key === "custom")!.icon;
 // 默认简历项
 export const DEFAULT_RESUME_ITEM = {
   // 简历ID

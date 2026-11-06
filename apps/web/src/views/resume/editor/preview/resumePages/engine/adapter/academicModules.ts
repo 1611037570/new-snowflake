@@ -1,9 +1,10 @@
 import { getValidDataEntries, isContentEmpty } from "@/views/resume/shared/validData";
+import { RESUME_MODULES } from "@/stores/modules/resume/config/moduleRegistry";
 import type { LayoutAdapter, LayoutAdapterContext, LayoutAdapterRegistry } from "./index";
 import { parseRichText } from "./richTextParser";
 
 /** 学术成果模块 key：条目字段与经历类模块不同，使用独立适配器与独立渲染分支 */
-export const ACADEMIC_MODULE_KEYS = ["publication"] as const;
+export const ACADEMIC_MODULE_KEYS = RESUME_MODULES.filter((module) => module.preview === "academic").map((module) => module.key);
 
 /** 读取学术成果模块中的有效条目 */
 const getAcademicItems = (context: LayoutAdapterContext) => {

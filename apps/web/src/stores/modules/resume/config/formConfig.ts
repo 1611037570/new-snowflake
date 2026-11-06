@@ -7,6 +7,7 @@ import type {
   ObjectFormField,
 } from "@/components/business/dynamicForm/api";
 import { JOB_INTENT_FIELDS } from "@snowflake/resume-core";
+import type { ResumeModuleKey } from "./moduleRegistry";
 
 // 展开状态数组：对应 SfCollapseItem 的激活 name，表示折叠容器为展开态
 export const EXPANDED = ["1"];
@@ -2936,4 +2937,4 @@ export const allConfig = {
   club: DEFAULT_CLUB_FORM,
   volunteer: DEFAULT_VOLUNTEER_FORM,
   custom: DEFAULT_CUSTOM_FORM,
-} satisfies Record<string, FormField | FormField[]>;
+} satisfies Record<ResumeModuleKey, FormField | FormField[]>;
