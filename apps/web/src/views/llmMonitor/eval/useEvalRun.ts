@@ -154,10 +154,17 @@ const runOne = async (evalCase: EvalCase): Promise<EvalResult> => {
       },
     });
     abortSession = session.abort;
-    answer = await session.run([
+    const result = await session.run([
       { role: "system", content: createDefaultAssistantPrompt().instructions },
       { role: "user", content: evalCase.prompt },
     ]);
+    // 评测直接使用运行状态，未完成不能仅因正文断言通过而算成功。
+    answer = result.answer;
+    if (result.status !== "completed") {
+      error = result.status === "aborted" ? "已取消"
+        : result.status === "error" ? describeResumeAiError(result.error ?? new Error(result.reason?.message || "评测执行失败"))
+          : result.reason?.message || result.answer || "本轮任务尚未完成";
+    }
   } catch (caught) {
     error = controller?.signal.aborted ? "已取消" : describeResumeAiError(caught);
   } finally {

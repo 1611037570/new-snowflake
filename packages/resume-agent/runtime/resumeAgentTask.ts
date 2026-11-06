@@ -1,4 +1,4 @@
-import type { ReactTool } from "@snowflake/agent";
+import type { AgentFinalCheck, AgentIssue, ReactTool } from "@snowflake/agent";
 import { loadSkillResource } from "../types";
 import { DRAFT_REQUEST_RULE, OPTIONAL_FIELD_RULE } from "../writingRules";
 import type {
@@ -374,7 +374,13 @@ export const createResumeAgentTaskRuntime = (options: CreateResumeAgentTaskRunti
     options.onTrace?.({ type: "implicit", task: cloneResumeAgentTask(task)!, tool: tool?.name ?? "入口任务" });
   };
 
-  const beforeFinal = (answer: string) => {
+  // 完成检查返回稳定编码，修正提示的变化不会重置同一问题的失败计数。
+  const retryCheck = (issue: ResumeAgentIncompleteReason): AgentFinalCheck => ({
+    status: "retry", // 当前业务条件尚未满足。
+    issue: { code: issue.code, message: issue.text, target: issue.target }, // 原因编码、业务目标与修正文字分离。
+  });
+
+  const beforeFinal = (answer: string): AgentFinalCheck => {
     // 明确入口即使模型跳过规划，也必须执行入口约定的真实业务效果。
     if (!task && (options.taskProfile || options.fixedRequiredEffects?.length)) ensureImplicitTask();
     if (!task || (implicitTask && !task.requiredEffects.length)) {
@@ -382,7 +388,7 @@ export const createResumeAgentTaskRuntime = (options: CreateResumeAgentTaskRunti
       const reason = "尚未理解本轮任务，请调用 plan_resume_task 明确目标与必需业务效果。";
       incompleteReason = { code: "no_plan", text: reason };
       options.onTrace?.({ type: "verdict", completed: false, reason });
-      return reason;
+      return retryCheck(incompleteReason);
     }
     // 按钮任务可在最终输出前核对其专用结果契约。
     // 工具可能晚于规划才登记，收口前按最新工具约束重算一次，避免验收遗漏写入前置。
@@ -396,14 +402,20 @@ export const createResumeAgentTaskRuntime = (options: CreateResumeAgentTaskRunti
     // 已明确等待补充或阻塞时直接交付原因，报告格式不再阻止任务收口。
     if (task.phase === "waiting" || task.phase === "blocked") {
       incompleteReason = undefined;
-      return null;
+      return {
+        status: task.phase, // 等待补充与业务阻塞独立于完成状态。
+        reason: {
+          code: task.phase === "waiting" ? "task_waiting" : "task_blocked", // 明确暂停类型。
+          message: task.pendingInput?.question ?? task.blocker?.reason ?? "当前任务已暂停", // 具体暂停原因。
+        }, // 宿主无需解析最终回答判断暂停。
+      };
     }
     const finalIssue = options.taskProfile?.validateFinal?.(answer, task.evidence);
     if (finalIssue) {
       incompleteReason = finalIssue;
       // 报告校验的拦截原因也进入运行轨迹，供最后的未完成结果定位。
       options.onTrace?.({ type: "verdict", completed: false, reason: finalIssue.text });
-      return finalIssue.text;
+      return retryCheck(finalIssue);
     }
     const result = evaluateResumeAgentCompletion(
       task.evidence,
@@ -417,7 +429,7 @@ export const createResumeAgentTaskRuntime = (options: CreateResumeAgentTaskRunti
       incompleteReason = undefined;
       // 观测：放行最终回答时记录结论。
       options.onTrace?.({ type: "verdict", completed: true, reason: null });
-      return null;
+      return { status: "completed" /* 真实工具证据已经满足任务条件。 */ };
     }
     task.phase = "verifying";
     // 保留结构化原因：回给模型的是具体说明，交给用户的是按编码映射的话术。
@@ -427,7 +439,7 @@ export const createResumeAgentTaskRuntime = (options: CreateResumeAgentTaskRunti
     };
     // 观测：拦截过早收口时记录拦截原因，排障依赖这条信号。
     options.onTrace?.({ type: "verdict", completed: false, reason: incompleteReason.text });
-    return incompleteReason.text;
+    return retryCheck(incompleteReason);
   };
 
   // 未完成原因映射为用户话术：内部校验细节只回给模型，不直接展示给用户
@@ -466,11 +478,11 @@ export const createResumeAgentTaskRuntime = (options: CreateResumeAgentTaskRunti
     return `本轮已完成的改动：${shown}${rest}。`;
   };
 
-  const onIncomplete = (reason: string) => {
+  const onIncomplete = (reason: AgentIssue) => {
     // 轮次耗尽时保留已发生的业务事实，并明确标记任务未完成。
     const issue: ResumeAgentIncompleteReason = incompleteReason ?? {
       code: "unresolved",
-      text: reason,
+      text: reason.message,
     };
     incompleteReason = undefined;
     const completedChanges = task?.evidence.filter((item) =>
@@ -480,7 +492,7 @@ export const createResumeAgentTaskRuntime = (options: CreateResumeAgentTaskRunti
       task.phase = "incomplete";
       task.pendingInput = undefined;
     }
-    const detail = reason.startsWith("同一问题已连续失败") ? reason : task?.phase === "waiting" && task.pendingInput
+    const detail = reason.code === "repeated_failure" ? reason.message : task?.phase === "waiting" && task.pendingInput
       ? task.pendingInput.question
       : task?.blocker?.reason ?? describeIncompleteReason(issue);
     const changeNotice = completedChanges.length

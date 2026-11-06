@@ -1,19 +1,18 @@
 import type { ToolCall } from "./types";
 import type { ToolRegistry } from "./tools";
 import { ToolNotFoundError } from "@snowflake/ai";
+import { toolErrorResult } from "./failure";
 
 // 将工具参数解析失败转换为可重试的工具观察结果
 function createToolArgumentFailure(toolName: string, error: unknown) {
   const message = error instanceof SyntaxError ? error.message : "未知 JSON 语法错误";
-  return {
-    __tool_error: true,
-    type: "invalid_tool_arguments",
-    tool: toolName,
+  return toolErrorResult({
+    category: "arguments", // 参数格式错误，不执行业务工具。
+    code: "invalid_tool_arguments", // 不受解析器错误文字影响的稳定编码。
+    target: toolName, // 参数错误归属于当前工具。
     message: `工具参数不是合法 JSON：${message}`,
-    retryable: true,
-    instruction:
-      "请立即重新调用同一工具，只发送符合 parameters 定义的标准 JSON 对象；不要输出 Markdown 代码块、自然语言或非法反斜杠转义。",
-  };
+    retryable: true, // 允许模型修正参数。
+  }, "请立即重新调用同一工具，只发送符合 parameters 定义的标准 JSON 对象；不要输出 Markdown 代码块、自然语言或非法反斜杠转义。");
 }
 
 /**
@@ -54,5 +53,15 @@ export async function executeToolCall(
     }
   }
 
+  // 合法 JSON 仍可能是数组、空值或标量，工具参数必须是对象。
+  if (!args || typeof args !== "object" || Array.isArray(args)) {
+    return toolErrorResult({
+      category: "arguments", // 参数根结构错误。
+      code: "invalid_tool_arguments", // 与非法 JSON 统一计数。
+      target: toolCall.function.name, // 归属当前工具。
+      message: "工具参数必须是 JSON 对象", // 提示模型修正结构。
+      retryable: true, // 尚未执行工具，可安全修正。
+    });
+  }
   return tool.execute(args);
 }

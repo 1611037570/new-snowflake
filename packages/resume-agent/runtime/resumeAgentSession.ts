@@ -1,6 +1,6 @@
-import type { ChatMessage, ReactConfig, ReactTool } from "@snowflake/agent";
+import type { AgentRunResult, ChatMessage, ReactConfig, ReactTool } from "@snowflake/agent";
 import type { SkillResource } from "../types";
-import { createAgent } from "@snowflake/agent";
+import { createAgent, getDefaultToolFailure } from "@snowflake/agent";
 import { getResumeAiModel } from "../request/client";
 import { getResumeAiMessage } from "../request/messages";
 import type { ResumeAiAgent } from "../request";
@@ -45,15 +45,15 @@ export type CreateResumeAgentSessionOptions = {
   onEvidence?: (evidence: ResumeAgentTaskEvidence) => void;
   // 任务建立、降级与完成校验时通知宿主，用于运行观测。
   onTrace?: (event: ResumeAgentTraceEvent) => void;
-  // 最终回答生成后同时返回任务快照。
-  onFinal?: (answer: string, task?: ResumeAgentTaskState) => void;
+  // 运行结束时同时返回结构化状态与当前任务快照。
+  onFinal?: (result: AgentRunResult, task?: ResumeAgentTaskState) => void;
   // 工具执行和异步装配前检查当前请求是否仍然有效。
   assertActive?: () => void;
 };
 
 export type ResumeAgentSession = {
-  // 使用统一任务上下文执行本轮消息。
-  run: (messages: ChatMessage[]) => Promise<string>;
+  // 使用统一任务上下文执行本轮消息，明确返回结束状态与原因。
+  run: (messages: ChatMessage[]) => Promise<AgentRunResult>;
   // 中止当前 ReAct 执行。
   abort: () => void;
   // 获取可持久化的当前任务快照。
@@ -104,14 +104,39 @@ export const createResumeAgentSession = async (
       getToolFailure: (call, result) => {
         const tool = businessTools.find((item) => item.name === call.function.name) as ResumeAgentTool | undefined;
         const evaluation = tool?.taskMeta?.evaluate(result);
-        return evaluation?.status === "failed" ? evaluation.summary : options.reactConfig.getToolFailure?.(call, result);
+        const supplied = options.reactConfig.getToolFailure?.(call, result);
+        if (supplied || evaluation?.status !== "failed") return supplied;
+        // 写操作错误使用操作类型和数据位置定位，字段值与提示文字不参与计数。
+        const value = result as Record<string, any> | null;
+        const issue = [
+          ...(Array.isArray(value?.validationIssues) ? value.validationIssues : []),
+          ...(Array.isArray(value?.executionIssues) ? value.executionIssues : []),
+        ][0];
+        if (issue?.code) {
+          let operation: Record<string, any> | undefined;
+          try { operation = JSON.parse(call.function.arguments).operations?.[issue.operationIndex]; } catch { /* 参数恢复后的调用仍可按错误类别计数。 */ }
+          return {
+            category: "rejected", // 业务字段或执行规则拒绝了操作。
+            code: issue.code, // 复用业务层已经声明的稳定编码。
+            target: operation ? JSON.stringify([operation.op, operation.module, operation.index ?? operation.from, operation.field]) : undefined, // 同一操作位置不受提交值变化影响。
+            message: issue.message || evaluation.summary, // 保留具体修正说明。
+            retryable: true, // 可根据校验反馈修正。
+          };
+        }
+        const failure = getDefaultToolFailure(result);
+        return failure ?? {
+          category: "rejected", // 工具结果没有满足业务效果要求。
+          code: "business_effect_failed", // 业务效果失败按稳定类型计数。
+          message: evaluation.summary, // 证据层给出的实际失败摘要。
+          retryable: true, // 允许按业务反馈继续修正。
+        };
       }, // 采用真实业务结果识别失败，部分成功仍允许继续处理。
       initialTool: "plan_resume_task", // 保留原有简历任务规划入口。
       // 首轮只发规划工具，后续轮次恢复完整工具集。
       resolveTools: (step) => (step === 0 && planTool ? [planTool] : undefined),
       beforeFinal: taskRuntime.beforeFinal, // 保留简历业务完成证据校验。
       onIncomplete: taskRuntime.onIncomplete, // 保留简历未完成结果处理。
-      onFinal: (answer) => options.onFinal?.(answer, taskRuntime.getTask()), // 保留任务快照回调。
+      onFinal: (result) => options.onFinal?.(result, taskRuntime.getTask()), // 结构化结果与任务证据一起返回。
     }, // 简历行为不迁入通用智能体。
   });
 

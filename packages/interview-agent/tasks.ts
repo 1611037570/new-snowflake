@@ -1,4 +1,4 @@
-import { createAgent, createReferenceTool } from "@snowflake/agent";
+import { createAgent, createReferenceTool, getCompletedAgentAnswer } from "@snowflake/agent";
 import type { ReactTool } from "@snowflake/agent";
 import { resumeIndustryKnowledge } from "@snowflake/resume-core";
 import { getInterviewModel } from "./model";
@@ -65,13 +65,19 @@ export const runInterviewTask = async (action: InterviewAction, input: Interview
       thinking: { type: "disabled" /* 不展示内部思考。 */ }, // 保持面试文本响应方式。
       beforeFinal: (answer) => {
         // 只核对读取与有效正文，不用问号数量限制自然表达或触发重写。
-        if (!resumeRead) return "请先调用 read_interview_resume 读取本场参考简历，再完成当前动作。";
-        if (!answer.trim()) return "本轮必须返回有效面试内容，请按当前动作重新生成。";
-        return null;
+        if (!resumeRead) return {
+          status: "retry", // 缺少本场简历读取。
+          issue: { code: "resume_not_read", message: "请先调用 read_interview_resume 读取本场参考简历，再完成当前动作。" }, // 稳定原因与模型修正说明。
+        };
+        if (!answer.trim()) return {
+          status: "retry", // 本轮没有有效正文。
+          issue: { code: "empty_answer", message: "本轮必须返回有效面试内容，请按当前动作重新生成。" }, // 空回答按统一类型计数。
+        };
+        return { status: "completed" /* 已取得必要资料与有效正文。 */ };
       }, // 面试只核对实际读取与当前内容，不经过简历任务账本。
       onIncomplete: () => {
-        throw new Error(!resumeRead ? "未能读取本场参考简历，请重试" : action === "question" ? "本轮未能完成出题，请重新生成本题" : "本轮内容未能完成，请重试");
-      }, // 重试耗尽按失败处理，不将未完成内容当成可作答题目。
+        return !resumeRead ? "未能读取本场参考简历，请重试" : action === "question" ? "本轮未能完成出题，请重新生成本题" : "本轮内容未能完成，请重试";
+      }, // 保留未完成状态，由文本入口拒绝把它当成可作答题目。
       onContent: (delta) => { if (resumeRead) options.onContent?.(delta); }, // 必须读取简历的动作等读取完成后展示，其他动作直接展示增量。
       onToken: options.onToken, // 本轮独立令牌统计。
       onAct: () => options.onReset?.(), // 清除工具调用前的临时文字。
@@ -82,7 +88,7 @@ export const runInterviewTask = async (action: InterviewAction, input: Interview
   options.signal?.addEventListener("abort", abort, { once: true });
   try {
     assertActive();
-    return (await agent.run([{
+    const result = await agent.run([{
       role: "user", // 本轮固定设置与真实作答。
       content: JSON.stringify(intro ? {
         resume: input.resume, // 本次选定的脱敏简历内容。
@@ -105,6 +111,8 @@ export const runInterviewTask = async (action: InterviewAction, input: Interview
         clarificationRequest: action === "clarification" ? input.clarificationRequest : undefined, // 澄清疑问不混作正式回答。
         previousReference: action === "reference" ? input.previousReference || undefined : undefined, // 只有更换参考回答时提供上一版。
       }), // 自我介绍直接携带资料，其他动作按权限读取参考简历。
-    }])).trim();
+    }]);
+    // 面试只接受完整回答，取消与执行异常继续沿用入口的错误处理。
+    return getCompletedAgentAnswer(result).trim();
   } finally { options.signal?.removeEventListener("abort", abort); }
 };

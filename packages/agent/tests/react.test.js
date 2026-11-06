@@ -54,7 +54,8 @@ test("执行工具后继续模型请求", async () => {
   });
 
   const answer = await runner.run([{ role: "user", content: "开始" }]);
-  assert.equal(answer, "完成");
+  assert.equal(answer.status, "completed");
+  assert.equal(answer.answer, "完成");
   assert.deepEqual(executed, [{ text: "你好" }]);
   assert.deepEqual(received, {
     reasoning: ["思考"],
@@ -97,7 +98,7 @@ test("按配置压缩 ReAct 的请求历史", async () => {
       onCompacted: (info) => compacted.push(info),
     },
   });
-  assert.equal(await runner.run(messages), "完成");
+  assert.equal((await runner.run(messages)).answer, "完成");
   assert.equal(messages.length, 4);
   assert.equal(sent.length, 3);
   assert.equal(sent.at(-1), messages.at(-1));
@@ -133,7 +134,7 @@ test("工具结果过大时继续 ReAct", async () => {
       summarize: () => "摘要",
     },
   });
-  assert.equal(await runner.run([{ role: "user", content: "当前问题" }]), "完成");
+  assert.equal((await runner.run([{ role: "user", content: "当前问题" }])).answer, "完成");
   assert.equal(sent[1].length, 2);
   assert.equal(sent[1][1].content, "此前对话摘要：\n摘要");
 });
@@ -152,10 +153,12 @@ test("最终答案未通过验收后继续修正", async () => {
     maxSteps: 2,
     beforeFinal: (answer) => {
       checked.push(answer);
-      return answer === "未经核对的答案" ? "请修正" : null;
+      return answer === "未经核对的答案"
+        ? { status: "retry", issue: { code: "answer_unverified", message: "请修正" } }
+        : { status: "completed" };
     },
   });
 
-  assert.equal(await runner.run([{ role: "user", content: "开始" }]), "修正后的答案");
+  assert.equal((await runner.run([{ role: "user", content: "开始" }])).answer, "修正后的答案");
   assert.deepEqual(checked, ["未经核对的答案", "修正后的答案"]);
 });

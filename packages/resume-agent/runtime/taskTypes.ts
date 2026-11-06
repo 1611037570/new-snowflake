@@ -133,6 +133,8 @@ export type ResumeAgentIncompleteReason = {
   text: string;
   // 用户可读的补充信息，例如未覆盖的模块名称或缺少的证据类型。
   detail?: string;
+  // 稳定业务目标，用于按模块、证据或事实区分重复失败。
+  target?: string;
 };
 
 export type ResumeAgentTaskProfile = {

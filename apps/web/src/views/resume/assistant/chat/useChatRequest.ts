@@ -388,13 +388,19 @@ export const useChatRequest = ({
             scrollToBottom();
           },
         },
-        onFinal: (answer, task) => {
+        onFinal: (result, task) => {
           if (!isCurrentRequest() || !lastMsg) return;
           // ReAct 自行依据任务理解与工具结果收口，写入记录只供撤回使用。
-          lastMsg.content = answer;
           lastMsg.resumeTask = task;
-          // 自动退出属于未完成，保留已有内容与改动，同时开放重试。
-          lastMsg.requestStatus = task?.phase === "incomplete" ? "error" : "success";
+          // 明确消费运行状态，取消保留当前显示，失败仍保留已写入改动与撤回入口。
+          if (result.status === "aborted") {
+            lastMsg.requestStatus = "stopped";
+          } else {
+            lastMsg.content = result.status === "error"
+              ? describeResumeAiError(result.error ?? new Error(result.reason?.message || "AI 请求失败"))
+              : result.answer;
+            lastMsg.requestStatus = result.status === "error" || result.status === "incomplete" ? "error" : "success";
+          }
           lastMsg.stepLabel = "";
           // 完成后保留过程区的展开状态，方便直接查看本次执行内容。
           scrollToBottom();

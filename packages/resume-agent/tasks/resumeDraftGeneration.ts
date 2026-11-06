@@ -1,4 +1,5 @@
 import type { ChatMessage, ReactTool } from "@snowflake/agent";
+import { getCompletedAgentAnswer } from "@snowflake/agent";
 import { getResumeAiMessage } from "../request/messages";
 import { createResumeAgentSession } from "../runtime/resumeAgentSession";
 import type { ResumeAgentTool } from "../runtime/types";
@@ -270,7 +271,8 @@ export const runResumeDraftGeneration = async (
 
   let answer = "";
   try {
-    answer = await session.run(messages);
+    // 已提交草稿也需通过完成校验，不把取消或未完成结果当作成功生成。
+    answer = getCompletedAgentAnswer(await session.run(messages));
   } finally {
     options.signal?.removeEventListener("abort", abortRunner);
   }

@@ -164,6 +164,7 @@ export const evaluateResumeAgentCompletion = (
         completed: false,
         reason: {
           code: "scope_uncovered",
+          target: [...uncoveredModules].sort().join(","), // 未覆盖模块使用稳定标识计数。
           detail: names,
           text: `本轮读取的${names}还没有实际改动，请继续完成这些范围后再给出结果。`,
         },
@@ -179,6 +180,7 @@ export const evaluateResumeAgentCompletion = (
       completed: false,
       reason: {
         code: "stale_read",
+        target: staleReadAfter, // 区分哪种业务效果需要重新读取。
         detail: EVIDENCE_NAMES[staleReadAfter],
         text: `已完成${EVIDENCE_NAMES[staleReadAfter]}，请重新读取最新简历数据后再生成最终结果。`,
       },
@@ -189,6 +191,7 @@ export const evaluateResumeAgentCompletion = (
       completed: false,
       reason: {
         code: "evidence_order",
+        target: `${invalidEvidenceOrder.after}:${invalidEvidenceOrder.evidence}`, // 证据顺序作为稳定目标。
         detail: `${EVIDENCE_NAMES[invalidEvidenceOrder.after]}→${EVIDENCE_NAMES[invalidEvidenceOrder.evidence]}`,
         text: `请在${EVIDENCE_NAMES[invalidEvidenceOrder.after]}成功后重新完成${EVIDENCE_NAMES[invalidEvidenceOrder.evidence]}。`,
       },
@@ -200,6 +203,7 @@ export const evaluateResumeAgentCompletion = (
       completed: false,
       reason: {
         code: "missing_evidence",
+        target: [...missingEvidence].sort().join(","), // 缺失证据类型不依赖展示名称。
         detail: missingNames,
         text: allowTaskPause
           ? `本轮任务还缺少${missingNames}的成功证据。请按当前入口和内容处理规则继续使用工具完成任务；确需补充时调用 request_resume_input，无法安全执行时调用 report_resume_blocker。`
@@ -212,6 +216,7 @@ export const evaluateResumeAgentCompletion = (
       completed: false,
       reason: {
         code: "missing_facts",
+        target: [...missingFacts].sort().join(","), // 缺失业务事实按稳定标识计数。
         text: allowTaskPause
           ? "本轮任务尚未取得完整处理结果，请继续根据工具返回的未完成项执行；确实无法继续时再记录缺失信息或阻塞原因。"
           : "本轮任务尚未取得完整处理结果，请继续根据工具返回的未完成项执行。",

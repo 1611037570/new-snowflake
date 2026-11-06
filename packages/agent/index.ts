@@ -1,10 +1,13 @@
 import type { LLM } from "@snowflake/ai";
 import { createReactRunner } from "./runtime/runner";
-import type { ChatMessage, ReactConfig, ReactTool } from "./runtime/types";
+import type { AgentRunResult, ChatMessage, ReactConfig, ReactTool } from "./runtime/types";
 
 export { createReactRunner } from "./runtime/runner";
 export { ToolRegistry } from "./runtime/tools";
 export type { ChatMessage, ReactConfig, ReactTool, ThinkResult, ToolCall, Observation } from "./runtime/types";
+export type { AgentIssue, AgentToolFailure, AgentToolErrorResult, AgentFinalCheck, AgentRunResult } from "./runtime/types";
+export { getDefaultToolFailure, isToolErrorResult } from "./runtime/failure";
+export { getCompletedAgentAnswer } from "./runtime/result";
 
 export interface AgentSkill {
   id: string; // 技能稳定标识。
@@ -31,7 +34,7 @@ export interface CreateAgentOptions {
 }
 
 export interface Agent {
-  run: (messages: ChatMessage[]) => Promise<string>; // 在独立运行器中执行当前消息。
+  run: (messages: ChatMessage[]) => Promise<AgentRunResult>; // 返回明确状态与停止原因，正文不承担状态协议。
   abort: () => void; // 只中止当前智能体的运行器。
 }
 
@@ -60,9 +63,9 @@ export const createAgent = (options: CreateAgentOptions): Agent => {
           content: instructions, // 不修改调用方的历史消息。
         });
       }
-      const answer = await runner.run(requestMessages);
-      options.assertActive?.();
-      return answer;
+      const result = await runner.run(requestMessages);
+      if (result.status !== "aborted" && result.status !== "error") options.assertActive?.();
+      return result;
     }, // 会话运行期间不共享消息或业务状态。
     abort: () => runner.abort(), // 取消仅作用于当前运行器。
   };

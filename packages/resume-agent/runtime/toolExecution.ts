@@ -97,6 +97,8 @@ export const createResumeAgentToolExecution = (
             // 工具前置条件由执行内核依据真实证据检查，业务适配器无需维护请求级布尔状态。
             return {
               accepted: false, // 本次工具没有执行。
+              code: "missing_required_evidence", // 缺少工具前置证据的稳定原因。
+              target: [...missingRequiredEvidence].sort().join(","), // 按证据类型区分缺失目标。
               missingRequiredEvidence, // 返回尚未取得的证据类型。
               error: "当前任务尚未完成本工具要求的前置操作", // 提供给模型的修正方向。
             };
@@ -116,6 +118,8 @@ export const createResumeAgentToolExecution = (
             // 数据未变化时相同失败参数不会再次执行，模型需要根据上次结果修正参数。
             return {
               accepted: false, // 本次没有再次执行工具。
+              code: "duplicate_failed_call", // 相同参数失败后重复提交。
+              target: tool.name, // 当前工具的重复失败。
               duplicateFailure: true, // 拒绝原因是相同失败参数被重复提交。
               error: "相同参数的工具调用已经失败，请根据上次结果修改参数后再试", // 提供给模型的修正方向。
             };

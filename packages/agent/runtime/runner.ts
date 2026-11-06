@@ -1,9 +1,10 @@
-import { AbortError, prepareContext, type LLM } from "@snowflake/ai";
+import { AbortError, isAbortError, prepareContext, type LLM } from "@snowflake/ai";
 import { executeToolCall } from "./actor";
 import { observe } from "./observer";
 import { think } from "./thinker";
 import { ToolRegistry } from "./tools";
-import type { ChatMessage, ReactConfig } from "./types";
+import { getDefaultToolFailure, isToolErrorResult, toolErrorResult, toolExceptionFailure } from "./failure";
+import type { AgentFinalCheck, AgentIssue, AgentRunResult, AgentToolFailure, ChatMessage, ReactConfig } from "./types";
 
 // 通用运行器负责模型与工具循环，业务完成规则由调用方注入。
 export const createReactRunner = (model: LLM, config: ReactConfig) => {
@@ -19,18 +20,20 @@ export const createReactRunner = (model: LLM, config: ReactConfig) => {
       abortRef.current?.();
     };
 
-    const run = async (initialMessages: ChatMessage[]): Promise<string> => {
+    const runLoop = async (initialMessages: ChatMessage[]): Promise<AgentRunResult> => {
       const maxSteps = config.maxSteps ?? 99;
       // 每次报告修正仍占模型请求轮次，累计修正和相同失败分别计数。
       const finalRetryLimit = config.finalRetryLimit ?? 99;
       const repeatedFailureLimit = config.repeatedFailureLimit ?? 3;
       // 按工具分别记录失败，穿插读取不能清除另一个工具的重复失败。
-      const failures = new Map<string, { reason: string /* 相同问题的规范化原因。 */; count: number /* 连续失败次数。 */ }>();
-      const recordFailure = (key: string, reason: string) => {
-        const normalized = reason.trim().replace(/\s+/g, " ");
-        const previous = failures.get(key);
-        const count = previous?.reason === normalized ? previous.count + 1 : 1;
-        failures.set(key, { reason: normalized, count });
+      const failures = new Map<string, Map<string, number>>();
+      const recordFailure = (scope: string, issue: AgentIssue, category = "final") => {
+        // 同一工具按类别、编码和目标分别累计，提示文字变化不会重置计数。
+        const key = JSON.stringify([category, issue.code, issue.target ?? ""]);
+        const scoped = failures.get(scope) ?? new Map<string, number>();
+        const count = (scoped.get(key) ?? 0) + 1;
+        scoped.set(key, count);
+        failures.set(scope, scoped);
         return count >= repeatedFailureLimit;
       };
       let history: ChatMessage[] = [...initialMessages];
@@ -40,7 +43,9 @@ export const createReactRunner = (model: LLM, config: ReactConfig) => {
         input: initialMessages,
       });
       let activeRound: { round: number; startTime: number } | null = null;
-      let lastIncompleteReason = "";
+      let lastIncompleteReason: AgentIssue | undefined;
+      let lastToolFailure: AgentToolFailure | undefined;
+      let steps = 0;
       let finalRetries = 0;
 
       // 统一记录每轮结束时间与耗时，异常和取消同样保留本轮数据
@@ -57,13 +62,19 @@ export const createReactRunner = (model: LLM, config: ReactConfig) => {
         activeRound = null;
       };
       // 退出不再请求模型，交给业务层保留已完成结果并说明停止原因。
-      const finishIncomplete = async (reason: string) => {
-        if (!config.onIncomplete) throw new Error(reason);
-        const answer = await config.onIncomplete(reason);
-        config.onFinal?.(answer);
+      const finishIncomplete = async (reason: AgentIssue, toolFailure?: AgentToolFailure): Promise<AgentRunResult> => {
+        const answer = config.onIncomplete ? await config.onIncomplete(reason) : reason.message;
+        if (aborted) throw new AbortError();
+        const result: AgentRunResult = {
+          status: "incomplete", // 轮次或重试停止不冒充任务完成。
+          answer, // 业务层说明保留已经生效的结果。
+          reason, // 独立停止原因供页面与任务入口读取。
+          steps, // 实际请求轮数。
+          toolFailure, // 导致自动停止的工具失败。
+        };
         finishActiveRound("error");
-        model.observer.finishLlmTrace(traceId, "error", reason);
-        return answer;
+        model.observer.finishLlmTrace(traceId, "error", reason.message);
+        return result;
       };
 
       try {
@@ -74,6 +85,7 @@ export const createReactRunner = (model: LLM, config: ReactConfig) => {
           if (aborted) throw new AbortError();
 
           const round = step + 1;
+          steps = round;
           activeRound = { round, startTime: Date.now() };
           model.observer.recordLlmTraceEvent(traceId, "round_start", { round });
           console.log(`[ReAct] 第 ${round}/${maxSteps} 步 Think`);
@@ -114,31 +126,44 @@ export const createReactRunner = (model: LLM, config: ReactConfig) => {
             const finalAnswer = result.finalAnswer;
 
             // 业务运行时可依据工具证据拒绝过早收口，反馈仍留在同一个 ReAct 历史中继续处理。
-            if (config.beforeFinal) {
-              const retryReason = await config.beforeFinal(finalAnswer);
-              if (retryReason) {
+            const verdict: AgentFinalCheck = config.beforeFinal ? await config.beforeFinal(finalAnswer) : { status: "completed" };
+            if (aborted) throw new AbortError();
+            if (verdict.status === "retry") {
+                const retryReason = verdict.issue;
                 lastIncompleteReason = retryReason;
                 // 不同问题允许继续修正，相同问题达到上限立即退出。
                 finalRetries += 1;
                 if (recordFailure("final", retryReason)) {
-                  return await finishIncomplete(`同一问题已连续失败 ${repeatedFailureLimit} 次，已停止自动重试：${retryReason}`);
+                  return await finishIncomplete({
+                    code: "repeated_failure", // 相同完成条件反复失败。
+                    target: retryReason.code, // 保留具体未满足的条件编码。
+                    message: `同一问题已连续失败 ${repeatedFailureLimit} 次，已停止自动重试：${retryReason.message}`, // 最新修正说明。
+                  });
                 }
                 if (step >= maxSteps - 1 || finalRetries > finalRetryLimit) {
-                  return await finishIncomplete(retryReason);
+                  return await finishIncomplete({
+                    code: step >= maxSteps - 1 ? "max_steps" : "final_retry_limit", // 区分总轮次与完成检查次数耗尽。
+                    target: retryReason.code, // 保留当前未满足条件。
+                    message: retryReason.message, // 保留业务未完成说明。
+                  });
                 }
                 history.push({ role: "assistant", content: result.finalAnswer });
-                history.push({ role: "system", content: retryReason });
-                config.onFinalRetry?.(retryReason);
+                history.push({ role: "system", content: retryReason.message });
+                config.onFinalRetry?.(retryReason.message);
                 finishActiveRound();
                 continue;
               }
-            }
 
             console.log("[ReAct] 最终答案:", finalAnswer);
-            config.onFinal?.(finalAnswer);
+            const runResult: AgentRunResult = {
+              status: verdict.status, // 业务决定完成、等待补充或阻塞。
+              answer: finalAnswer, // 通过业务结束检查的回答。
+              reason: verdict.reason, // 等待或阻塞的具体原因。
+              steps, // 实际请求轮数。
+            };
             finishActiveRound();
             model.observer.finishLlmTrace(traceId, "success");
-            return finalAnswer;
+            return runResult;
           }
 
           // 回填 assistant 的工具调用消息
@@ -161,15 +186,23 @@ export const createReactRunner = (model: LLM, config: ReactConfig) => {
             model.observer.recordLlmTraceEvent(traceId, "tool_call", { round, toolCall });
             config.onAct?.(toolCall);
             let raw: unknown;
+            let executionError: unknown;
             try {
               raw = await executeToolCall(registry, toolCall);
             } catch (error) {
-              // 工具执行错误交由宿主决定：返回观察值则恢复继续，否则按原错误中断
+              // 取消不经过业务恢复；其它异常统一分类，宿主仍可补充工具指引。
+              if (aborted || isAbortError(error)) throw error;
               const fallback = config.onToolError?.({ toolCall, error: error as Error, tools: config.tools });
-              if (fallback === undefined) throw error;
-              raw = fallback;
+              const failure = toolExceptionFailure(error, fallback !== undefined);
+              raw = toolErrorResult(failure, fallback);
+              if (!failure.retryable) executionError = error;
             }
-            const observation = observe(toolCall, raw);
+            if (aborted) throw new AbortError();
+            // 参数与执行错误直接使用统一契约；业务结果保留原值用于证据与部分成功判断。
+            const failure = isToolErrorResult(raw) ? raw.failure
+              : config.getToolFailure?.(toolCall, raw) ?? getDefaultToolFailure(raw);
+            const observationValue = failure && !isToolErrorResult(raw) ? toolErrorResult(failure, raw) : raw;
+            const observation = observe(toolCall, observationValue);
             // 观察结果可能包含整份简历，截断打印避免刷屏
             const observePreview =
               observation.content.length > 2000
@@ -188,16 +221,18 @@ export const createReactRunner = (model: LLM, config: ReactConfig) => {
               content: observation.content,
               tool_call_id: observation.toolCallId,
             });
-            // 只识别明确的失败信封，不把普通数据中的空值视为失败。
-            const value = raw && typeof raw === "object" ? raw as Record<string, unknown> : null;
-            const failure = config.getToolFailure?.(toolCall, raw) || (value && (
-              value.accepted === false || value.success === false || value.applied === false ||
-              value.status === "failed" || typeof value.error === "string"
-            ) ? String(value.error || value.message || value.summary || "工具未能完成操作") : "");
             const failureKey = `tool:${toolCall.function.name}`;
             if (failure) {
-              if (recordFailure(failureKey, failure)) {
-                return await finishIncomplete(`同一问题已连续失败 ${repeatedFailureLimit} 次，已停止自动重试：${toolCall.function.name}，${failure}`);
+              if (!failure.retryable) {
+                lastToolFailure = failure;
+                throw executionError ?? new Error(failure.message);
+              }
+              if (recordFailure(failureKey, failure, failure.category)) {
+                return await finishIncomplete({
+                  code: "repeated_failure", // 同一工具、类别与目标达到失败上限。
+                  target: toolCall.function.name, // 标识停止的工具。
+                  message: `同一问题已连续失败 ${repeatedFailureLimit} 次，已停止自动重试：${toolCall.function.name}，${failure.message}`, // 保留最新失败说明。
+                }, failure);
               }
             } else failures.delete(failureKey);
           }
@@ -205,14 +240,32 @@ export const createReactRunner = (model: LLM, config: ReactConfig) => {
         }
 
         console.warn("[ReAct] 超出最大步数");
-        return await finishIncomplete(lastIncompleteReason || "执行轮次已用完，尚未生成通过校验的最终回答。");
+        return await finishIncomplete({
+          code: "max_steps", // 总执行轮次耗尽。
+          message: lastIncompleteReason?.message || "执行轮次已用完，尚未生成通过校验的最终回答。", // 保留最后的业务校验原因。
+        });
       } catch (error) {
         const message = String((error as any)?.message || "ReAct 执行失败");
-        const status = error instanceof AbortError ? "aborted" : "error";
+        const status = aborted || isAbortError(error) ? "aborted" : "error";
         finishActiveRound(status);
         model.observer.finishLlmTrace(traceId, status, message);
-        throw error;
+        const result: AgentRunResult = {
+          status, // 取消与执行异常明确分开。
+          answer: "", // 不把流式候选当成已经验收的回答。
+          steps, // 中断前开始的轮数。
+          reason: { code: status === "aborted" ? "aborted" : "execution_error", message /* 原始错误说明。 */ }, // 稳定停止原因。
+          error, // 保留宿主既有异常展示所需的原对象。
+          toolFailure: lastToolFailure, // 执行异常发生在工具时保留分类信息。
+        };
+        return result;
       }
+    };
+
+    // 宿主结束回调只执行一次，回调异常不重新进入循环的错误收口。
+    const run = async (messages: ChatMessage[]): Promise<AgentRunResult> => {
+      const result = await runLoop(messages);
+      config.onFinal?.(result);
+      return result;
     };
 
     return { abort, run };
